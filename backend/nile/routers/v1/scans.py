@@ -2,11 +2,13 @@
 
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from nile.core.database import get_db
+from nile.core.exceptions import AnalysisError, InvalidAddressError, NotFoundError
+from nile.core.rate_limit import RateLimiter
 from nile.models.scan_job import ScanJob
 from nile.schemas.scan import ScanCreate, ScanResponse
 from nile.schemas.solana_scan import (
@@ -20,21 +22,26 @@ from nile.services.program_analyzer import program_analyzer
 
 router = APIRouter()
 
+# 10 scans per minute per IP — prevents abuse of the heavy analysis endpoint
+scan_limiter = RateLimiter(max_requests=10, window_seconds=60)
+
 
 @router.post("/solana", response_model=SolanaScanResponse)
-async def scan_solana_program(req: SolanaScanRequest):
+async def scan_solana_program(req: SolanaScanRequest, request: Request):
     """Instantly scan a Solana program or token address and return NILE score.
 
     This is the hero endpoint — paste an address, get a security score.
     No database record required; runs analysis in real-time.
     """
+    scan_limiter.check(request)
+
     if not validate_solana_address(req.program_address):
-        raise HTTPException(400, "Invalid Solana address")
+        raise InvalidAddressError()
 
     analysis = await program_analyzer.analyze(req.program_address)
 
     if "error" in analysis:
-        raise HTTPException(422, analysis["error"])
+        raise AnalysisError(analysis["error"])
 
     score = analysis["score"]
 
@@ -94,5 +101,5 @@ async def get_scan(scan_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(ScanJob).where(ScanJob.id == scan_id))
     scan = result.scalar_one_or_none()
     if not scan:
-        raise HTTPException(status_code=404, detail="Scan not found")
+        raise NotFoundError("Scan not found")
     return scan
