@@ -1,4 +1,4 @@
-"""Scan worker — processes queued scan jobs and computes NILE scores."""
+"""Scan worker — processes queued scan jobs using Solana Program Analyzer."""
 
 import asyncio
 import logging
@@ -12,13 +12,7 @@ from nile.core.event_bus import publish_event
 from nile.models.contract import Contract
 from nile.models.nile_score import NileScore
 from nile.models.scan_job import ScanJob
-from nile.services.nile_scorer import (
-    EssenceInputs,
-    ImageInputs,
-    LikenessInputs,
-    NameInputs,
-    compute_nile_score,
-)
+from nile.services.program_analyzer import program_analyzer
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +20,7 @@ POLL_INTERVAL_SECONDS = 5
 
 
 async def process_scan_job(db: AsyncSession, job: ScanJob) -> None:
-    """Process a single scan job — run scoring and persist results."""
+    """Process a single scan job — run Solana program analysis and persist results."""
     job.status = "running"
     job.started_at = datetime.now(UTC)
     await db.flush()
@@ -38,43 +32,34 @@ async def process_scan_job(db: AsyncSession, job: ScanJob) -> None:
         if not contract:
             raise ValueError(f"Contract {job.contract_id} not found")
 
-        # Build scoring inputs from contract metadata and existing data
-        meta = contract.metadata_ or {}
+        if not contract.address:
+            raise ValueError(f"Contract {job.contract_id} has no address")
 
-        name_inputs = NameInputs(
-            is_verified=contract.is_verified,
-            audit_count=meta.get("audit_count", 0),
-            age_days=meta.get("age_days", 0),
-            team_identified=meta.get("team_identified", False),
-            ecosystem_score=meta.get("ecosystem_score", 0.0),
-        )
+        # Run the Solana Program Analyzer
+        analysis = await program_analyzer.analyze(contract.address)
 
-        image_inputs = ImageInputs(
-            open_critical=meta.get("open_critical", 0),
-            open_high=meta.get("open_high", 0),
-            open_medium=meta.get("open_medium", 0),
-            avg_patch_time_days=meta.get("avg_patch_time_days"),
-            trend=meta.get("trend", 0.0),
-        )
+        if "error" in analysis:
+            raise ValueError(f"Analysis failed: {analysis['error']}")
 
-        likeness_inputs = LikenessInputs(
-            slither_findings=meta.get("slither_findings", []),
-            evmbench_pattern_matches=meta.get("evmbench_pattern_matches", []),
-        )
+        score_result = analysis["score"]
 
-        essence_inputs = EssenceInputs(
-            test_coverage_pct=meta.get("test_coverage_pct", 0.0),
-            avg_cyclomatic_complexity=meta.get("avg_cyclomatic_complexity", 5.0),
-            has_proxy_pattern=meta.get("has_proxy_pattern", False),
-            has_admin_keys=meta.get("has_admin_keys", False),
-            has_timelock=meta.get("has_timelock", True),
-            external_call_count=meta.get("external_call_count", 0),
-        )
-
-        # Compute NILE score
-        score_result = compute_nile_score(
-            name_inputs, image_inputs, likeness_inputs, essence_inputs
-        )
+        # Update contract metadata with analysis results
+        contract.metadata_ = {
+            **(contract.metadata_ or {}),
+            "analysis_type": analysis.get("analysis_type"),
+            "idl_analysis": analysis.get("idl_analysis"),
+            "ecosystem": analysis.get("ecosystem"),
+            "exploit_matches": [
+                {
+                    "pattern_id": m["pattern_id"],
+                    "name": m["name"],
+                    "severity": m["severity"],
+                    "confidence": m["confidence"],
+                }
+                for m in analysis.get("exploit_matches", [])
+            ],
+            "last_scanned_at": datetime.now(UTC).isoformat(),
+        }
 
         # Persist score
         nile_score = NileScore(
@@ -95,12 +80,14 @@ async def process_scan_job(db: AsyncSession, job: ScanJob) -> None:
         job.result = {
             "nile_score": score_result.total_score,
             "grade": score_result.grade,
+            "analysis_type": analysis.get("analysis_type"),
             "sub_scores": {
                 "name": score_result.name_score,
                 "image": score_result.image_score,
                 "likeness": score_result.likeness_score,
                 "essence": score_result.essence_score,
             },
+            "exploit_match_count": len(analysis.get("exploit_matches", [])),
         }
         job.finished_at = datetime.now(UTC)
         await db.flush()
@@ -117,8 +104,9 @@ async def process_scan_job(db: AsyncSession, job: ScanJob) -> None:
         )
 
         logger.info(
-            "Scan job %s completed: score=%.2f grade=%s",
+            "Scan job %s completed: score=%.2f grade=%s (%s)",
             job.id, score_result.total_score, score_result.grade,
+            analysis.get("analysis_type"),
         )
 
     except Exception as e:

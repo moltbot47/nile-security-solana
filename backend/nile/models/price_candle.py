@@ -32,7 +32,7 @@ class PriceCandle(Base):
     high: Mapped[float] = mapped_column(Numeric(20, 10))
     low: Mapped[float] = mapped_column(Numeric(20, 10))
     close: Mapped[float] = mapped_column(Numeric(20, 10))
-    volume_eth: Mapped[float] = mapped_column(Numeric(20, 10), default=0)
+    volume_sol: Mapped[float] = mapped_column(Numeric(20, 10), default=0)
     volume_usd: Mapped[float] = mapped_column(Numeric(16, 2), default=0)
     trade_count: Mapped[int] = mapped_column(Integer, default=0)
 

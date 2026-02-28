@@ -79,7 +79,7 @@ async def market_overview(
     graduating = await db.execute(
         select(func.count(SoulToken.id)).where(
             SoulToken.phase == "bonding",
-            SoulToken.reserve_balance_eth >= SoulToken.graduation_threshold_eth * 0.8,
+            SoulToken.reserve_balance_sol >= SoulToken.graduation_threshold_sol * 0.8,
         )
     )
 
@@ -102,7 +102,7 @@ async def graduating_soon(
         .options(selectinload(SoulToken.person))
         .where(SoulToken.phase == "bonding")
         .order_by(
-            (SoulToken.reserve_balance_eth / SoulToken.graduation_threshold_eth).desc()
+            (SoulToken.reserve_balance_sol / SoulToken.graduation_threshold_sol).desc()
         )
         .limit(limit)
     )
@@ -153,16 +153,16 @@ async def get_soul_token(
         symbol=token.symbol,
         phase=token.phase,
         chain=token.chain,
-        current_price_eth=float(token.current_price_eth or 0),
+        current_price_sol=float(token.current_price_sol or 0),
         current_price_usd=float(token.current_price_usd or 0),
         market_cap_usd=float(token.market_cap_usd or 0),
         total_supply=float(token.total_supply or 0),
-        reserve_balance_eth=float(token.reserve_balance_eth or 0),
+        reserve_balance_sol=float(token.reserve_balance_sol or 0),
         volume_24h_usd=float(token.volume_24h_usd or 0),
         price_change_24h_pct=float(token.price_change_24h_pct or 0),
         holder_count=token.holder_count or 0,
         nile_valuation_total=float(token.nile_valuation_total or 0),
-        graduation_threshold_eth=float(token.graduation_threshold_eth or 0),
+        graduation_threshold_sol=float(token.graduation_threshold_sol or 0),
         graduated_at=token.graduated_at,
         creator_address=token.creator_address,
         created_at=token.created_at,

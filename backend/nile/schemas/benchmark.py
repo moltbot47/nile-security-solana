@@ -36,4 +36,4 @@ class BenchmarkBaseline(BaseModel):
     agent: str
     mode: str
     score_pct: float
-    source: str  # "evmbench_published" or "nile_run"
+    source: str  # "benchmark_published" or "nile_run"

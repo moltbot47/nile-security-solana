@@ -10,10 +10,10 @@ from nile.models.base import Base, TimestampMixin, UUIDMixin
 class Contract(UUIDMixin, TimestampMixin, Base):
     __tablename__ = "contracts"
 
-    address: Mapped[str | None] = mapped_column(String(42), index=True)
+    address: Mapped[str | None] = mapped_column(String(48), index=True)
     name: Mapped[str] = mapped_column(String(256), nullable=False)
     source_url: Mapped[str | None] = mapped_column(Text)
-    chain: Mapped[str] = mapped_column(String(32), default="ethereum")
+    chain: Mapped[str] = mapped_column(String(32), default="solana")
     compiler_version: Mapped[str | None] = mapped_column(String(32))
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
     metadata_: Mapped[dict] = mapped_column("metadata", JSONB, default=dict)

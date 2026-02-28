@@ -145,8 +145,8 @@ async def check_pump_and_dump(
         return None
 
     # Check price change
-    first_price = float(trades[0].price_eth)
-    last_price = float(trades[-1].price_eth)
+    first_price = float(trades[0].price_sol)
+    last_price = float(trades[-1].price_sol)
 
     if first_price <= 0:
         return None
@@ -164,7 +164,7 @@ async def check_pump_and_dump(
     wallet_volumes: dict[str, float] = {}
     for t in buy_trades:
         addr = t.trader_address
-        wallet_volumes[addr] = wallet_volumes.get(addr, 0) + float(t.eth_amount)
+        wallet_volumes[addr] = wallet_volumes.get(addr, 0) + float(t.sol_amount)
 
     total_buy_vol = sum(wallet_volumes.values())
     if total_buy_vol <= 0:
@@ -214,8 +214,8 @@ async def check_cliff_event(
     if len(trades) < 2:
         return None
 
-    first_price = float(trades[0].price_eth)
-    last_price = float(trades[-1].price_eth)
+    first_price = float(trades[0].price_sol)
+    last_price = float(trades[-1].price_sol)
 
     if first_price <= 0:
         return None
@@ -224,14 +224,14 @@ async def check_cliff_event(
 
     if price_change < -0.3:  # >30% drop
         sell_trades = [t for t in trades if t.side == "sell"]
-        total_sell_eth = sum(float(t.eth_amount) for t in sell_trades)
+        total_sell_sol = sum(float(t.sol_amount) for t in sell_trades)
 
         alert = {
             "risk_type": "cliff_event",
             "severity": "critical",
             "soul_token_id": soul_token_id,
             "price_drop_pct": round(abs(price_change) * 100, 2),
-            "sell_volume_eth": round(total_sell_eth, 4),
+            "sell_volume_sol": round(total_sell_sol, 4),
             "trade_count": len(trades),
             "window_minutes": 10,
         }
@@ -306,7 +306,7 @@ async def get_token_risk_summary(
         select(
             func.count(Trade.id).label("trade_count"),
             func.count(func.distinct(Trade.trader_address)).label("unique_traders"),
-            func.sum(Trade.eth_amount).label("total_volume_eth"),
+            func.sum(Trade.sol_amount).label("total_volume_sol"),
         )
         .where(
             and_(
@@ -328,6 +328,6 @@ async def get_token_risk_summary(
         "last_hour": {
             "trade_count": row.trade_count or 0,
             "unique_traders": row.unique_traders or 0,
-            "total_volume_eth": float(row.total_volume_eth or 0),
+            "total_volume_sol": float(row.total_volume_sol or 0),
         },
     }

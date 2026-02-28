@@ -12,13 +12,13 @@ from nile.schemas.benchmark import BenchmarkBaseline, BenchmarkCreate, Benchmark
 
 router = APIRouter()
 
-# Published EVMbench baselines (Feb 2026)
+# Published benchmark baselines (Feb 2026)
 PUBLISHED_BASELINES = [
     BenchmarkBaseline(
-        agent="gpt-5.3-codex", mode="exploit", score_pct=72.2, source="evmbench_published"
+        agent="gpt-5.3-codex", mode="exploit", score_pct=72.2, source="benchmark_published"
     ),
     BenchmarkBaseline(
-        agent="gpt-5", mode="exploit", score_pct=31.9, source="evmbench_published"
+        agent="gpt-5", mode="exploit", score_pct=31.9, source="benchmark_published"
     ),
 ]
 

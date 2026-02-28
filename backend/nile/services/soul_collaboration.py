@@ -138,7 +138,7 @@ async def graduation_notification(
     person_id: str,
     token_id: str,
     token_symbol: str,
-    reserve_eth: float,
+    reserve_sol: float,
 ) -> None:
     """Token graduated from bonding curve → notify all agents + Discord."""
     await _publish(
@@ -147,8 +147,8 @@ async def graduation_notification(
             "person_id": person_id,
             "token_id": token_id,
             "token_symbol": token_symbol,
-            "reserve_eth": reserve_eth,
+            "reserve_sol": reserve_sol,
             "action": "graduation",
         },
     )
-    logger.info("Graduation: $%s graduated with %.2f ETH reserve", token_symbol, reserve_eth)
+    logger.info("Graduation: $%s graduated with %.2f SOL reserve", token_symbol, reserve_sol)

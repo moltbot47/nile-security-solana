@@ -198,16 +198,16 @@ export interface SoulToken {
   symbol: string;
   phase: string;
   chain: string;
-  current_price_eth: number;
+  current_price_sol: number;
   current_price_usd: number;
   market_cap_usd: number;
   total_supply: number;
-  reserve_balance_eth: number;
+  reserve_balance_sol: number;
   volume_24h_usd: number;
   price_change_24h_pct: number;
   holder_count: number;
   nile_valuation_total: number;
-  graduation_threshold_eth: number;
+  graduation_threshold_sol: number;
   graduated_at: string | null;
   creator_address: string | null;
   created_at: string;
@@ -242,11 +242,11 @@ export interface Trade {
   soul_token_id: string;
   side: string;
   token_amount: number;
-  eth_amount: number;
-  price_eth: number;
+  sol_amount: number;
+  price_sol: number;
   price_usd: number;
-  fee_total_eth: number;
-  tx_hash: string | null;
+  fee_total_sol: number;
+  tx_sig: string | null;
   trader_address: string | null;
   phase: string;
   created_at: string;
@@ -259,7 +259,7 @@ export interface PriceCandle {
   high: number;
   low: number;
   close: number;
-  volume_eth: number;
+  volume_sol: number;
   volume_usd: number;
   trade_count: number;
 }
@@ -280,11 +280,11 @@ export interface PortfolioItem {
   token_symbol: string | null;
   person_name: string | null;
   balance: number;
-  avg_buy_price_eth: number;
-  total_invested_eth: number;
-  realized_pnl_eth: number;
-  current_price_eth: number | null;
-  unrealized_pnl_eth: number | null;
+  avg_buy_price_sol: number;
+  total_invested_sol: number;
+  realized_pnl_sol: number;
+  current_price_sol: number | null;
+  unrealized_pnl_sol: number | null;
 }
 
 export interface RiskSummary {
@@ -294,6 +294,6 @@ export interface RiskSummary {
   last_hour: {
     trade_count: number;
     unique_traders: number;
-    total_volume_eth: number;
+    total_volume_sol: number;
   };
 }

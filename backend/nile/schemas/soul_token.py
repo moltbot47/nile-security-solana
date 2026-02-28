@@ -19,16 +19,16 @@ class SoulTokenResponse(BaseModel):
     symbol: str
     phase: str
     chain: str
-    current_price_eth: float
+    current_price_sol: float
     current_price_usd: float
     market_cap_usd: float
     total_supply: float
-    reserve_balance_eth: float
+    reserve_balance_sol: float
     volume_24h_usd: float
     price_change_24h_pct: float
     holder_count: int
     nile_valuation_total: float
-    graduation_threshold_eth: float
+    graduation_threshold_sol: float
     graduated_at: datetime | None = None
     creator_address: str | None = None
     created_at: datetime
@@ -72,11 +72,11 @@ class TradeResponse(BaseModel):
     soul_token_id: uuid.UUID
     side: str
     token_amount: float
-    eth_amount: float
-    price_eth: float
+    sol_amount: float
+    price_sol: float
     price_usd: float
-    fee_total_eth: float
-    tx_hash: str | None = None
+    fee_total_sol: float
+    tx_sig: str | None = None
     trader_address: str | None = None
     phase: str
     created_at: datetime
@@ -105,7 +105,7 @@ class TradeRequest(BaseModel):
     side: str = Field(..., pattern=r"^(buy|sell)$")
     amount: Decimal = Field(..., gt=0)
     max_slippage_pct: float = Field(default=1.0, ge=0, le=50)
-    trader_address: str = Field(..., min_length=42, max_length=42)
+    trader_address: str = Field(..., min_length=32, max_length=48)
 
 
 # --- Price Candle Schemas ---
@@ -118,7 +118,7 @@ class PriceCandleResponse(BaseModel):
     high: float
     low: float
     close: float
-    volume_eth: float
+    volume_sol: float
     volume_usd: float
     trade_count: int
 
@@ -134,10 +134,10 @@ class PortfolioItem(BaseModel):
     token_symbol: str | None = None
     person_name: str | None = None
     balance: float
-    avg_buy_price_eth: float
-    total_invested_eth: float
-    realized_pnl_eth: float
-    current_price_eth: float | None = None
-    unrealized_pnl_eth: float | None = None
+    avg_buy_price_sol: float
+    total_invested_sol: float
+    realized_pnl_sol: float
+    current_price_sol: float | None = None
+    unrealized_pnl_sol: float | None = None
 
     model_config = {"from_attributes": True}

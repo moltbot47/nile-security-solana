@@ -92,7 +92,8 @@ def compute_name_score(inputs: NameInputs) -> tuple[float, dict]:
     # Bonus for security.txt (Solana standard)
     security_txt_bonus = 2.0 if inputs.on_security_txt else 0.0
 
-    total = _clamp(source_score + audit_score + maturity_score + team_score + ecosystem + security_txt_bonus)
+    subtotal = source_score + audit_score + maturity_score + team_score + ecosystem
+    total = _clamp(subtotal + security_txt_bonus)
     details = {
         "source_verified": source_score,
         "audit_history": audit_score,

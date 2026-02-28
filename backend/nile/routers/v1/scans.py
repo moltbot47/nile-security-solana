@@ -1,4 +1,4 @@
-"""Scan job endpoints."""
+"""Scan job endpoints — includes Solana-native instant scan."""
 
 import uuid
 
@@ -9,8 +9,55 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from nile.core.database import get_db
 from nile.models.scan_job import ScanJob
 from nile.schemas.scan import ScanCreate, ScanResponse
+from nile.schemas.solana_scan import (
+    ExploitMatch,
+    SolanaScanRequest,
+    SolanaScanResponse,
+    SolanaScanScoreBreakdown,
+)
+from nile.services.chain_service import validate_solana_address
+from nile.services.program_analyzer import program_analyzer
 
 router = APIRouter()
+
+
+@router.post("/solana", response_model=SolanaScanResponse)
+async def scan_solana_program(req: SolanaScanRequest):
+    """Instantly scan a Solana program or token address and return NILE score.
+
+    This is the hero endpoint — paste an address, get a security score.
+    No database record required; runs analysis in real-time.
+    """
+    if not validate_solana_address(req.program_address):
+        raise HTTPException(400, "Invalid Solana address")
+
+    analysis = await program_analyzer.analyze(req.program_address)
+
+    if "error" in analysis:
+        raise HTTPException(422, analysis["error"])
+
+    score = analysis["score"]
+
+    return SolanaScanResponse(
+        address=req.program_address,
+        analysis_type=analysis["analysis_type"],
+        total_score=score.total_score,
+        grade=score.grade,
+        scores=SolanaScanScoreBreakdown(
+            name=score.name_score,
+            image=score.image_score,
+            likeness=score.likeness_score,
+            essence=score.essence_score,
+        ),
+        details=score.details,
+        exploit_matches=[
+            ExploitMatch(**m) for m in analysis.get("exploit_matches", [])
+        ],
+        program_info=analysis.get("program_info"),
+        token_info=analysis.get("token_info"),
+        ecosystem=analysis.get("ecosystem"),
+        idl_analysis=analysis.get("idl_analysis"),
+    )
 
 
 @router.get("", response_model=list[ScanResponse])
@@ -39,7 +86,6 @@ async def create_scan(data: ScanCreate, db: AsyncSession = Depends(get_db)):
     db.add(scan)
     await db.commit()
     await db.refresh(scan)
-    # TODO: enqueue scan worker job
     return scan
 
 

@@ -10,7 +10,7 @@ class ContractCreate(BaseModel):
     address: str | None = None
     name: str
     source_url: str | None = None
-    chain: str = "ethereum"
+    chain: str = "solana"
     compiler_version: str | None = None
     is_verified: bool = False
     metadata: dict = {}

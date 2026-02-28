@@ -40,8 +40,8 @@ class OracleEvent(UUIDMixin, TimestampMixin, Base):
     required_confirmations: Mapped[int] = mapped_column(Integer, default=2)
 
     # On-chain reference
-    on_chain_event_id: Mapped[str | None] = mapped_column(String(66))
-    tx_hash: Mapped[str | None] = mapped_column(String(66))
+    on_chain_event_id: Mapped[str | None] = mapped_column(String(96))
+    tx_sig: Mapped[str | None] = mapped_column(String(96))
 
     # Raw data and agent voting record
     raw_data: Mapped[dict] = mapped_column(JSONB, default=dict)

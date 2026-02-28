@@ -96,7 +96,7 @@ async def execute_buy(
 
     amount = float(req.amount)
     price = float(token.current_price_usd or 0)
-    price_eth = float(token.current_price_eth or 0)
+    price_sol = float(token.current_price_sol or 0)
     fee = amount * 0.01
     tokens_out = (amount - fee) / price if price > 0 else 0
 
@@ -104,13 +104,13 @@ async def execute_buy(
         soul_token_id=token.id,
         side="buy",
         token_amount=tokens_out,
-        eth_amount=amount,
-        price_eth=price_eth,
+        sol_amount=amount,
+        price_sol=price_sol,
         price_usd=price,
-        fee_total_eth=fee,
-        fee_creator_eth=fee * 0.5,
-        fee_protocol_eth=fee * 0.3,
-        fee_staker_eth=fee * 0.2,
+        fee_total_sol=fee,
+        fee_creator_sol=fee * 0.5,
+        fee_protocol_sol=fee * 0.3,
+        fee_staker_sol=fee * 0.2,
         trader_address=req.trader_address,
         phase=token.phase,
         source="api",
@@ -155,21 +155,21 @@ async def execute_sell(
 
     amount = float(req.amount)
     price = float(token.current_price_usd or 0)
-    price_eth = float(token.current_price_eth or 0)
-    eth_out = amount * price_eth
+    price_sol = float(token.current_price_sol or 0)
+    eth_out = amount * price_sol
     fee = eth_out * 0.01
 
     trade = Trade(
         soul_token_id=token.id,
         side="sell",
         token_amount=amount,
-        eth_amount=eth_out - fee,
-        price_eth=price_eth,
+        sol_amount=eth_out - fee,
+        price_sol=price_sol,
         price_usd=price,
-        fee_total_eth=fee,
-        fee_creator_eth=fee * 0.5,
-        fee_protocol_eth=fee * 0.3,
-        fee_staker_eth=fee * 0.2,
+        fee_total_sol=fee,
+        fee_creator_sol=fee * 0.5,
+        fee_protocol_sol=fee * 0.3,
+        fee_staker_sol=fee * 0.2,
         trader_address=req.trader_address,
         phase=token.phase,
         source="api",
@@ -224,9 +224,9 @@ async def get_portfolio(
     items = []
     for h in holdings:
         token = h.soul_token
-        current_price = float(token.current_price_eth or 0) if token else 0
+        current_price = float(token.current_price_sol or 0) if token else 0
         balance = float(h.balance or 0)
-        avg_price = float(h.avg_buy_price_eth or 0)
+        avg_price = float(h.avg_buy_price_sol or 0)
         unrealized = (current_price - avg_price) * balance if current_price and avg_price else None
 
         items.append(
@@ -236,11 +236,11 @@ async def get_portfolio(
                 token_symbol=token.symbol if token else None,
                 person_name=None,
                 balance=balance,
-                avg_buy_price_eth=avg_price,
-                total_invested_eth=float(h.total_invested_eth or 0),
-                realized_pnl_eth=float(h.realized_pnl_eth or 0),
-                current_price_eth=current_price,
-                unrealized_pnl_eth=unrealized,
+                avg_buy_price_sol=avg_price,
+                total_invested_sol=float(h.total_invested_sol or 0),
+                realized_pnl_sol=float(h.realized_pnl_sol or 0),
+                current_price_sol=current_price,
+                unrealized_pnl_sol=unrealized,
             )
         )
     return items

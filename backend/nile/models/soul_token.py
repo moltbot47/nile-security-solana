@@ -1,4 +1,4 @@
-"""SoulToken model — ERC-20 token representing a person's tradeable NIL value."""
+"""SoulToken model — SPL token representing a person's tradeable NIL value."""
 
 import uuid
 from datetime import datetime
@@ -17,12 +17,12 @@ class SoulToken(UUIDMixin, TimestampMixin, Base):
         UUID(as_uuid=True), ForeignKey("persons.id"), unique=True, index=True
     )
 
-    # On-chain addresses
+    # On-chain addresses (Solana base58, max 44 chars)
     token_address: Mapped[str | None] = mapped_column(
-        String(42), unique=True, index=True
+        String(48), unique=True, index=True
     )
-    curve_address: Mapped[str | None] = mapped_column(String(42))
-    pool_address: Mapped[str | None] = mapped_column(String(42))
+    curve_address: Mapped[str | None] = mapped_column(String(48))
+    pool_address: Mapped[str | None] = mapped_column(String(48))
 
     # Token identity
     name: Mapped[str] = mapped_column(String(64), nullable=False)
@@ -32,14 +32,14 @@ class SoulToken(UUIDMixin, TimestampMixin, Base):
     phase: Mapped[str] = mapped_column(
         String(16), default="bonding", index=True
     )  # bonding, amm, orderbook
-    chain: Mapped[str] = mapped_column(String(16), default="base")
+    chain: Mapped[str] = mapped_column(String(16), default="solana")
 
     # Cached market data (updated by market data worker)
-    current_price_eth: Mapped[float] = mapped_column(Numeric(20, 10), default=0)
+    current_price_sol: Mapped[float] = mapped_column(Numeric(20, 10), default=0)
     current_price_usd: Mapped[float] = mapped_column(Numeric(16, 4), default=0)
     market_cap_usd: Mapped[float] = mapped_column(Numeric(16, 2), default=0)
     total_supply: Mapped[float] = mapped_column(Numeric(28, 18), default=0)
-    reserve_balance_eth: Mapped[float] = mapped_column(Numeric(20, 10), default=0)
+    reserve_balance_sol: Mapped[float] = mapped_column(Numeric(20, 10), default=0)
     volume_24h_usd: Mapped[float] = mapped_column(Numeric(16, 2), default=0)
     price_change_24h_pct: Mapped[float] = mapped_column(Numeric(8, 4), default=0)
     holder_count: Mapped[int] = mapped_column(Integer, default=0)
@@ -48,13 +48,13 @@ class SoulToken(UUIDMixin, TimestampMixin, Base):
     nile_valuation_total: Mapped[float] = mapped_column(Numeric(5, 2), default=0)
 
     # Graduation
-    graduation_threshold_eth: Mapped[float] = mapped_column(
-        Numeric(20, 10), default=20
-    )  # ~$50K
+    graduation_threshold_sol: Mapped[float] = mapped_column(
+        Numeric(20, 10), default=200
+    )  # ~$50K at ~$250/SOL
     graduated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     # Creator info
-    creator_address: Mapped[str | None] = mapped_column(String(42))
+    creator_address: Mapped[str | None] = mapped_column(String(48))
     creator_royalty_bps: Mapped[int] = mapped_column(Integer, default=50)  # 0.5%
 
     metadata_: Mapped[dict] = mapped_column("metadata", JSONB, default=dict)

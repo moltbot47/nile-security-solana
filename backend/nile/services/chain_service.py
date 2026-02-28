@@ -1,9 +1,10 @@
 """Chain integration service — Solana interactions for NILE Security ecosystem."""
 
-import base58
 import json
 import logging
 from pathlib import Path
+
+import base58
 
 from nile.config import settings
 
@@ -116,11 +117,11 @@ class SolanaChainService:
 
             # First, find the programdata account
             from solders.pubkey import Pubkey as Pk
-            BPF_LOADER = Pk.from_string("BPFLoaderUpgradeab1e11111111111111111111111")
+            bpf_loader = Pk.from_string("BPFLoaderUpgradeab1e11111111111111111111111")
 
             # Derive programdata address
             programdata_addr, _ = Pk.find_program_address(
-                [bytes(pubkey)], BPF_LOADER
+                [bytes(pubkey)], bpf_loader
             )
             pd_resp = await self.async_client.get_account_info(programdata_addr)
 
@@ -234,7 +235,6 @@ class SolanaChainService:
             return []
         try:
             from solders.pubkey import Pubkey
-            from solders.signature import Signature
             pubkey = Pubkey.from_string(address)
             resp = await self.async_client.get_signatures_for_address(
                 pubkey, limit=limit

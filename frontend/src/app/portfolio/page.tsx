@@ -5,9 +5,9 @@ import Link from "next/link";
 import { api } from "@/lib/api";
 import type { PortfolioItem, Trade } from "@/lib/types";
 
-function formatETH(value: number): string {
-  if (value >= 1000) return `${(value / 1000).toFixed(2)}K ETH`;
-  return `${value.toFixed(4)} ETH`;
+function formatSOL(value: number): string {
+  if (value >= 1000) return `${(value / 1000).toFixed(2)}K SOL`;
+  return `${value.toFixed(4)} SOL`;
 }
 
 function formatUSD(value: number): string {
@@ -16,7 +16,7 @@ function formatUSD(value: number): string {
   return `$${value.toFixed(2)}`;
 }
 
-const ETH_PRICE = 2500; // placeholder
+const SOL_PRICE = 250; // placeholder
 
 export default function PortfolioPage() {
   const [wallet, setWallet] = useState("");
@@ -44,14 +44,14 @@ export default function PortfolioPage() {
   };
 
   // Calculate totals
-  const totalInvested = holdings.reduce((s, h) => s + h.total_invested_eth, 0);
+  const totalInvested = holdings.reduce((s, h) => s + h.total_invested_sol, 0);
   const totalUnrealized = holdings.reduce(
-    (s, h) => s + (h.unrealized_pnl_eth ?? 0),
+    (s, h) => s + (h.unrealized_pnl_sol ?? 0),
     0
   );
-  const totalRealized = holdings.reduce((s, h) => s + h.realized_pnl_eth, 0);
+  const totalRealized = holdings.reduce((s, h) => s + h.realized_pnl_sol, 0);
   const totalValue = holdings.reduce(
-    (s, h) => s + h.balance * (h.current_price_eth ?? 0),
+    (s, h) => s + h.balance * (h.current_price_sol ?? 0),
     0
   );
 
@@ -69,14 +69,14 @@ export default function PortfolioPage() {
         <div className="flex gap-3">
           <input
             type="text"
-            placeholder="Enter wallet address (0x...)"
+            placeholder="Enter wallet address (Solana base58)"
             value={wallet}
             onChange={(e) => setWallet(e.target.value)}
             className="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-sm font-mono placeholder-gray-500 focus:outline-none focus:border-nile-500"
           />
           <button
-            onClick={() => wallet.length === 42 && loadPortfolio(wallet)}
-            disabled={wallet.length !== 42 || loading}
+            onClick={() => wallet.length >= 32 && wallet.length <= 44 && loadPortfolio(wallet)}
+            disabled={wallet.length < 32 || wallet.length > 44 || loading}
             className="px-6 py-2 bg-nile-500 hover:bg-nile-600 disabled:bg-gray-700 disabled:text-gray-500 rounded-lg text-sm font-medium transition-colors"
           >
             {loading ? "Loading..." : "View Portfolio"}
@@ -90,15 +90,15 @@ export default function PortfolioPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="rounded-xl border border-gray-800 p-4">
               <p className="text-xs text-gray-500">Total Value</p>
-              <p className="text-xl font-mono mt-1">{formatETH(totalValue)}</p>
+              <p className="text-xl font-mono mt-1">{formatSOL(totalValue)}</p>
               <p className="text-xs text-gray-500">
-                ~{formatUSD(totalValue * ETH_PRICE)}
+                ~{formatUSD(totalValue * SOL_PRICE)}
               </p>
             </div>
             <div className="rounded-xl border border-gray-800 p-4">
               <p className="text-xs text-gray-500">Total Invested</p>
               <p className="text-xl font-mono mt-1">
-                {formatETH(totalInvested)}
+                {formatSOL(totalInvested)}
               </p>
             </div>
             <div className="rounded-xl border border-gray-800 p-4">
@@ -109,7 +109,7 @@ export default function PortfolioPage() {
                 }`}
               >
                 {totalUnrealized >= 0 ? "+" : ""}
-                {formatETH(totalUnrealized)}
+                {formatSOL(totalUnrealized)}
               </p>
             </div>
             <div className="rounded-xl border border-gray-800 p-4">
@@ -120,7 +120,7 @@ export default function PortfolioPage() {
                 }`}
               >
                 {totalRealized >= 0 ? "+" : ""}
-                {formatETH(totalRealized)}
+                {formatSOL(totalRealized)}
               </p>
             </div>
           </div>
@@ -159,34 +159,34 @@ export default function PortfolioPage() {
                           {h.balance.toFixed(2)}
                         </td>
                         <td className="py-3 px-4 text-right font-mono">
-                          {h.avg_buy_price_eth.toFixed(6)} ETH
+                          {h.avg_buy_price_sol.toFixed(6)} SOL
                         </td>
                         <td className="py-3 px-4 text-right font-mono">
-                          {h.current_price_eth?.toFixed(6) ?? "--"} ETH
+                          {h.current_price_sol?.toFixed(6) ?? "--"} SOL
                         </td>
                         <td className="py-3 px-4 text-right font-mono">
-                          {h.total_invested_eth.toFixed(4)} ETH
+                          {h.total_invested_sol.toFixed(4)} SOL
                         </td>
                         <td
                           className={`py-3 px-4 text-right font-mono ${
-                            (h.unrealized_pnl_eth ?? 0) >= 0
+                            (h.unrealized_pnl_sol ?? 0) >= 0
                               ? "text-green-400"
                               : "text-red-400"
                           }`}
                         >
-                          {h.unrealized_pnl_eth != null
-                            ? `${h.unrealized_pnl_eth >= 0 ? "+" : ""}${h.unrealized_pnl_eth.toFixed(4)}`
+                          {h.unrealized_pnl_sol != null
+                            ? `${h.unrealized_pnl_sol >= 0 ? "+" : ""}${h.unrealized_pnl_sol.toFixed(4)}`
                             : "--"}
                         </td>
                         <td
                           className={`py-3 px-4 text-right font-mono ${
-                            h.realized_pnl_eth >= 0
+                            h.realized_pnl_sol >= 0
                               ? "text-green-400"
                               : "text-red-400"
                           }`}
                         >
-                          {h.realized_pnl_eth >= 0 ? "+" : ""}
-                          {h.realized_pnl_eth.toFixed(4)}
+                          {h.realized_pnl_sol >= 0 ? "+" : ""}
+                          {h.realized_pnl_sol.toFixed(4)}
                         </td>
                       </tr>
                     ))}
@@ -211,7 +211,7 @@ export default function PortfolioPage() {
                       <th className="text-left py-3 px-4">Time</th>
                       <th className="text-center py-3 px-4">Side</th>
                       <th className="text-right py-3 px-4">Tokens</th>
-                      <th className="text-right py-3 px-4">ETH</th>
+                      <th className="text-right py-3 px-4">SOL</th>
                       <th className="text-right py-3 px-4">Price</th>
                       <th className="text-right py-3 px-4">Fee</th>
                     </tr>
@@ -240,13 +240,13 @@ export default function PortfolioPage() {
                           {t.token_amount.toFixed(2)}
                         </td>
                         <td className="py-3 px-4 text-right font-mono">
-                          {t.eth_amount.toFixed(4)}
+                          {t.sol_amount.toFixed(4)}
                         </td>
                         <td className="py-3 px-4 text-right font-mono">
                           ${t.price_usd.toFixed(2)}
                         </td>
                         <td className="py-3 px-4 text-right font-mono text-gray-500">
-                          {t.fee_total_eth.toFixed(6)}
+                          {t.fee_total_sol.toFixed(6)}
                         </td>
                       </tr>
                     ))}

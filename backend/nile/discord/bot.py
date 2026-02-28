@@ -308,7 +308,7 @@ class NileBot(discord.Client):
             return
 
         symbol = m.get("token_symbol", "???")
-        reserve = m.get("reserve_eth", 0)
+        reserve = m.get("reserve_sol", 0)
         embed = discord.Embed(
             title=f"${symbol} GRADUATED!",
             description=(
