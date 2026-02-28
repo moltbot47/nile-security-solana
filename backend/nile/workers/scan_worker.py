@@ -119,7 +119,9 @@ async def process_scan_job(db: AsyncSession, job: ScanJob) -> None:
 
         logger.info(
             "Scan job %s completed: score=%.2f grade=%s (%s)",
-            job.id, score_result.total_score, score_result.grade,
+            job.id,
+            score_result.total_score,
+            score_result.grade,
             analysis.get("analysis_type"),
         )
 
@@ -135,10 +137,7 @@ async def poll_and_process() -> None:
     """Poll for queued scan jobs and process them."""
     async with async_session() as db:
         result = await db.execute(
-            select(ScanJob)
-            .where(ScanJob.status == "queued")
-            .order_by(ScanJob.created_at)
-            .limit(5)
+            select(ScanJob).where(ScanJob.status == "queued").order_by(ScanJob.created_at).limit(5)
         )
         jobs = list(result.scalars().all())
 

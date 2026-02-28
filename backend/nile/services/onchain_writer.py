@@ -13,10 +13,7 @@ logger = logging.getLogger(__name__)
 
 # Load IDL for program interaction
 _IDL_PATH = (
-    Path(__file__).resolve().parent.parent.parent.parent
-    / "target"
-    / "idl"
-    / "nile_security.json"
+    Path(__file__).resolve().parent.parent.parent.parent / "target" / "idl" / "nile_security.json"
 )
 
 
@@ -60,15 +57,9 @@ async def submit_score_onchain(
         target = Pubkey.from_string(program_address)
 
         # Derive PDAs
-        authority_pda, _ = Pubkey.find_program_address(
-            [b"nile_authority"], program_id
-        )
-        profile_pda, _ = Pubkey.find_program_address(
-            [b"program", bytes(target)], program_id
-        )
-        agent_pda, _ = Pubkey.find_program_address(
-            [b"agent", bytes(deployer.pubkey())], program_id
-        )
+        authority_pda, _ = Pubkey.find_program_address([b"nile_authority"], program_id)
+        profile_pda, _ = Pubkey.find_program_address([b"program", bytes(target)], program_id)
+        agent_pda, _ = Pubkey.find_program_address([b"agent", bytes(deployer.pubkey())], program_id)
 
         # Build instruction data using Anchor discriminator
         # submit_score discriminator: first 8 bytes of sha256("global:submit_score")
@@ -119,8 +110,7 @@ async def submit_score_onchain(
             sig = str(result.value)
 
             logger.info(
-                "Score submitted on-chain: %s → tx %s "
-                "(N=%d I=%d L=%d E=%d)",
+                "Score submitted on-chain: %s → tx %s (N=%d I=%d L=%d E=%d)",
                 program_address,
                 sig,
                 name_score,
@@ -165,18 +155,11 @@ async def register_program_onchain(
         program_id = Pubkey.from_string(settings.program_id)
         target = Pubkey.from_string(program_address)
 
-        profile_pda, _ = Pubkey.find_program_address(
-            [b"program", bytes(target)], program_id
-        )
+        profile_pda, _ = Pubkey.find_program_address([b"program", bytes(target)], program_id)
 
         disc = hashlib.sha256(b"global:register_program").digest()[:8]
         name_bytes = name.encode("utf-8")
-        data = (
-            disc
-            + bytes(target)
-            + struct.pack("<I", len(name_bytes))
-            + name_bytes
-        )
+        data = disc + bytes(target) + struct.pack("<I", len(name_bytes)) + name_bytes
 
         from solders.instruction import AccountMeta, Instruction
         from solders.system_program import ID as SYS_PROGRAM_ID
@@ -216,7 +199,5 @@ async def register_program_onchain(
             await client.close()
 
     except Exception:
-        logger.exception(
-            "Failed to register program on-chain: %s", program_address
-        )
+        logger.exception("Failed to register program on-chain: %s", program_address)
         return None

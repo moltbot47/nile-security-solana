@@ -13,6 +13,7 @@ from dataclasses import dataclass, field
 @dataclass
 class NameInputs:
     """Identity & provenance signals for a Solana program."""
+
     is_verified: bool = False  # Anchor IDL published / source verified on Solscan
     audit_count: int = 0  # Audits by OtterSec, Sec3, Neodyme, Halborn, etc.
     age_days: int = 0  # Days since program deployment
@@ -24,6 +25,7 @@ class NameInputs:
 @dataclass
 class ImageInputs:
     """Security posture signals — Solana-specific vulnerability categories."""
+
     missing_signer_checks: int = 0  # Instructions that don't verify signers
     pda_seed_collisions: int = 0  # Potential PDA seed collision vectors
     unchecked_arithmetic: int = 0  # Arithmetic without overflow checks
@@ -37,6 +39,7 @@ class ImageInputs:
 @dataclass
 class LikenessInputs:
     """Pattern matching against known Solana exploit signatures."""
+
     # Static analysis findings (from custom Rust/Anchor analyzer or Soteria)
     static_analysis_findings: list[dict] = field(default_factory=list)
     # Pattern matches against known Solana exploits (Wormhole, Mango, Cashio, Crema)
@@ -48,6 +51,7 @@ class LikenessInputs:
 @dataclass
 class EssenceInputs:
     """Code quality & complexity signals for Solana programs."""
+
     test_coverage_pct: float = 0.0  # 0-100: Anchor test coverage
     avg_instruction_complexity: float = 5.0  # Average cyclomatic complexity per ix handler
     upgrade_authority_active: bool = False  # True = program is upgradeable (risk)

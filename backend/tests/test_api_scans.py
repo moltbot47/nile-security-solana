@@ -17,6 +17,7 @@ def test_scan_request_valid():
 def test_scan_request_rejects_short():
     import pytest
     from pydantic import ValidationError
+
     with pytest.raises(ValidationError):
         SolanaScanRequest(program_address="abc")
 

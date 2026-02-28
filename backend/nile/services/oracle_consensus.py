@@ -150,9 +150,7 @@ async def _trigger_revaluation(db: AsyncSession, event: OracleEvent) -> None:
     )
     essence_inputs = PersonEssenceInputs()
 
-    valuation = compute_person_valuation(
-        name_inputs, image_inputs, likeness_inputs, essence_inputs
-    )
+    valuation = compute_person_valuation(name_inputs, image_inputs, likeness_inputs, essence_inputs)
 
     # Update person scores
     person.nile_name_score = valuation.name_score

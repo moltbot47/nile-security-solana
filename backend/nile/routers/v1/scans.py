@@ -57,9 +57,7 @@ async def scan_solana_program(req: SolanaScanRequest, request: Request):
             essence=score.essence_score,
         ),
         details=score.details,
-        exploit_matches=[
-            ExploitMatch(**m) for m in analysis.get("exploit_matches", [])
-        ],
+        exploit_matches=[ExploitMatch(**m) for m in analysis.get("exploit_matches", [])],
         program_info=analysis.get("program_info"),
         token_info=analysis.get("token_info"),
         ecosystem=analysis.get("ecosystem"),

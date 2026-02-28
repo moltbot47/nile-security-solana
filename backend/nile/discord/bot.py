@@ -427,9 +427,7 @@ class NileBot(discord.Client):
                     await channel.send(embed=embed, file=file)
                     logger.info("Posted screenshot to #%s", channel_name)
 
-    async def _post_screenshot_to(
-        self, channel_name: str, path: str, name: str
-    ) -> None:
+    async def _post_screenshot_to(self, channel_name: str, path: str, name: str) -> None:
         """Capture a single page and post to a specific channel."""
         screenshot = await capture_page(DASHBOARD_URL, path, name)
         if screenshot and screenshot.exists():
@@ -528,9 +526,7 @@ async def nile_screenshot(interaction: discord.Interaction) -> None:
     screenshots = await capture_all_pages(DASHBOARD_URL)
     count = len(screenshots)
     if count > 0:
-        await interaction.followup.send(
-            f"Captured {count} screenshots. Check the NILE channels!"
-        )
+        await interaction.followup.send(f"Captured {count} screenshots. Check the NILE channels!")
         await bot._post_all_screenshots()
     else:
         await interaction.followup.send(

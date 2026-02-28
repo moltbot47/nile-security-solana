@@ -12,11 +12,15 @@ def test_single_instruction_all_validated():
                 "accounts": [
                     {"name": "admin", "isMut": True, "isSigner": True},
                     {
-                        "name": "config", "isMut": True, "isSigner": False,
+                        "name": "config",
+                        "isMut": True,
+                        "isSigner": False,
                         "type": {"kind": "account"},
                     },
                     {
-                        "name": "system", "isMut": False, "isSigner": False,
+                        "name": "system",
+                        "isMut": False,
+                        "isSigner": False,
                         "type": {"kind": "program"},
                     },
                 ],
@@ -77,8 +81,10 @@ def test_instruction_with_cpi_target():
                 "accounts": [
                     {"name": "user", "isMut": True, "isSigner": True},
                     {
-                        "name": "token_program", "isMut": False,
-                        "isSigner": False, "type": {"kind": "program"},
+                        "name": "token_program",
+                        "isMut": False,
+                        "isSigner": False,
+                        "type": {"kind": "program"},
                     },
                     {"name": "dex_program", "isMut": False, "isSigner": False},
                 ],
@@ -101,7 +107,9 @@ def test_validation_rate_calculation():
                 "accounts": [
                     {"name": "a", "isMut": True, "isSigner": True},
                     {
-                        "name": "b", "isMut": True, "isSigner": False,
+                        "name": "b",
+                        "isMut": True,
+                        "isSigner": False,
                         "type": {"kind": "account"},
                     },
                     {"name": "c", "isMut": True, "isSigner": False},

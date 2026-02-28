@@ -14,6 +14,7 @@ from nile.services.nile_scorer import (
 
 # --- Name dimension tests ---
 
+
 def test_name_score_verified_program():
     inputs = NameInputs(
         is_verified=True, audit_count=3, age_days=730, team_identified=True, ecosystem_score=15.0
@@ -32,8 +33,10 @@ def test_name_score_unverified_anonymous():
 
 def test_name_score_with_security_txt():
     inputs = NameInputs(
-        is_verified=True, on_security_txt=True,
-        team_identified=True, ecosystem_score=10.0,
+        is_verified=True,
+        on_security_txt=True,
+        team_identified=True,
+        ecosystem_score=10.0,
     )
     score, details = compute_name_score(inputs)
     assert details["security_txt"] == 2.0
@@ -47,6 +50,7 @@ def test_name_score_new_program():
 
 
 # --- Image dimension tests ---
+
 
 def test_image_score_clean_program():
     inputs = ImageInputs(
@@ -92,6 +96,7 @@ def test_image_score_with_patch_bonus():
 
 # --- Likeness dimension tests ---
 
+
 def test_likeness_score_no_patterns():
     inputs = LikenessInputs()
     score, _ = compute_likeness_score(inputs)
@@ -99,9 +104,7 @@ def test_likeness_score_no_patterns():
 
 
 def test_likeness_score_high_confidence_match():
-    inputs = LikenessInputs(
-        exploit_pattern_matches=[{"confidence": 0.9}, {"confidence": 0.7}]
-    )
+    inputs = LikenessInputs(exploit_pattern_matches=[{"confidence": 0.9}, {"confidence": 0.7}])
     score, details = compute_likeness_score(inputs)
     assert score == 70.0  # 100 - 20 - 10
     assert details["exploit_match_count"] == 2
@@ -128,6 +131,7 @@ def test_likeness_score_static_findings():
 
 
 # --- Essence dimension tests ---
+
 
 def test_essence_score_well_tested():
     inputs = EssenceInputs(
@@ -177,6 +181,7 @@ def test_essence_upgrade_multisig_mitigates():
 
 # --- Composite score tests ---
 
+
 def test_composite_nile_score():
     result = compute_nile_score(
         name_inputs=NameInputs(is_verified=True, audit_count=2, age_days=365, team_identified=True),
@@ -198,11 +203,16 @@ def test_composite_nile_score():
 def test_grade_assignment():
     result = compute_nile_score(
         name_inputs=NameInputs(
-            is_verified=True, audit_count=3, age_days=730,
-            team_identified=True, ecosystem_score=20,
+            is_verified=True,
+            audit_count=3,
+            age_days=730,
+            team_identified=True,
+            ecosystem_score=20,
         ),
         image_inputs=ImageInputs(
-            missing_signer_checks=0, pda_seed_collisions=0, trend=5.0,
+            missing_signer_checks=0,
+            pda_seed_collisions=0,
+            trend=5.0,
         ),
         likeness_inputs=LikenessInputs(),
         essence_inputs=EssenceInputs(test_coverage_pct=95, avg_instruction_complexity=3),
@@ -215,7 +225,9 @@ def test_grade_f_for_terrible_program():
     result = compute_nile_score(
         name_inputs=NameInputs(),
         image_inputs=ImageInputs(
-            missing_signer_checks=3, unsafe_cpi_calls=2, pda_seed_collisions=2,
+            missing_signer_checks=3,
+            unsafe_cpi_calls=2,
+            pda_seed_collisions=2,
         ),
         likeness_inputs=LikenessInputs(
             exploit_pattern_matches=[{"confidence": 0.95}],

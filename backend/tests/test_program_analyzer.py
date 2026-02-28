@@ -7,6 +7,7 @@ from nile.services.program_analyzer import SolanaProgramAnalyzer
 
 # --- IDL Security Analysis tests ---
 
+
 def test_analyze_idl_no_idl():
     result = analyze_idl_security(None)
     assert result["has_idl"] is False
@@ -27,12 +28,16 @@ def test_analyze_idl_basic_program():
                 "accounts": [
                     {"name": "authority", "isMut": True, "isSigner": True},
                     {
-                        "name": "state", "isMut": True,
-                        "isSigner": False, "type": {"kind": "account"},
+                        "name": "state",
+                        "isMut": True,
+                        "isSigner": False,
+                        "type": {"kind": "account"},
                     },
                     {
-                        "name": "systemProgram", "isMut": False,
-                        "isSigner": False, "type": {"kind": "program"},
+                        "name": "systemProgram",
+                        "isMut": False,
+                        "isSigner": False,
+                        "type": {"kind": "program"},
                     },
                 ],
                 "args": [],
@@ -67,6 +72,7 @@ def test_analyze_idl_unvalidated_accounts():
 
 # --- Analyzer unit tests ---
 
+
 @pytest.mark.asyncio
 async def test_analyzer_invalid_address():
     analyzer = SolanaProgramAnalyzer()
@@ -83,6 +89,7 @@ async def test_analyzer_rejects_eth_address():
 
 
 # --- Exploit pattern matching tests ---
+
 
 def test_rug_pull_confidence_mint_authority():
     analyzer = SolanaProgramAnalyzer()
@@ -129,6 +136,7 @@ def test_rug_similarity_safe():
 
 
 # --- Pattern matching integration ---
+
 
 def test_pattern_confidence_access_control():
     analyzer = SolanaProgramAnalyzer()

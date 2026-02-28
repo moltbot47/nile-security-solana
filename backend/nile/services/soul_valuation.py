@@ -205,8 +205,7 @@ def compute_person_essence_score(inputs: PersonEssenceInputs) -> tuple[float, di
     trajectory_score = _clamp(trajectory_score, 0, 20)
 
     total = _clamp(
-        career_score + achievement_score + endorsement_score
-        + earning_score + trajectory_score
+        career_score + achievement_score + endorsement_score + earning_score + trajectory_score
     )
     details = {
         "career_maturity": round(career_score, 2),

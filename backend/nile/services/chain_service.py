@@ -46,6 +46,7 @@ class SolanaChainService:
         if self._client is None:
             try:
                 from solders.rpc.api import Client
+
                 self._client = Client(settings.solana_rpc_url)
             except ImportError:
                 logger.error("solders not installed — run: pip install solders")
@@ -58,6 +59,7 @@ class SolanaChainService:
         if self._async_client is None:
             try:
                 from solders.rpc.async_api import AsyncClient
+
                 self._async_client = AsyncClient(settings.solana_rpc_url)
             except ImportError:
                 logger.error("solders not installed — run: pip install solders")
@@ -73,6 +75,7 @@ class SolanaChainService:
             return None
         try:
             from solders.pubkey import Pubkey
+
             pubkey = Pubkey.from_string(program_address)
             resp = await self.async_client.get_account_info(pubkey)
 
@@ -97,6 +100,7 @@ class SolanaChainService:
             return None
         try:
             from solders.pubkey import Pubkey
+
             pubkey = Pubkey.from_string(program_address)
 
             # Programs on Solana have a programdata account that holds the upgrade authority
@@ -117,12 +121,11 @@ class SolanaChainService:
 
             # First, find the programdata account
             from solders.pubkey import Pubkey as Pk
+
             bpf_loader = Pk.from_string("BPFLoaderUpgradeab1e11111111111111111111111")
 
             # Derive programdata address
-            programdata_addr, _ = Pk.find_program_address(
-                [bytes(pubkey)], bpf_loader
-            )
+            programdata_addr, _ = Pk.find_program_address([bytes(pubkey)], bpf_loader)
             pd_resp = await self.async_client.get_account_info(programdata_addr)
 
             if pd_resp.value is None:
@@ -153,6 +156,7 @@ class SolanaChainService:
             return None
         try:
             from solders.pubkey import Pubkey
+
             pubkey = Pubkey.from_string(mint_address)
             resp = await self.async_client.get_account_info(pubkey)
 
@@ -173,6 +177,7 @@ class SolanaChainService:
             # 50-81: freeze_authority pubkey
 
             import struct
+
             has_mint_auth = struct.unpack("<I", data[0:4])[0] == 1
             mint_authority = None
             if has_mint_auth:
@@ -203,6 +208,7 @@ class SolanaChainService:
         """Get SOL/USD price from Pyth Network."""
         try:
             from solders.pubkey import Pubkey
+
             feed_pubkey = Pubkey.from_string(settings.pyth_sol_usd_feed)
             resp = await self.async_client.get_account_info(feed_pubkey)
 
@@ -217,28 +223,26 @@ class SolanaChainService:
                 return None
 
             import struct
+
             # Price is at offset 208 in the Pyth price account (i64)
             # Exponent is at offset 20 (i32)
             exponent = struct.unpack_from("<i", data, 20)[0]
             price = struct.unpack_from("<q", data, 208)[0]
 
-            return price * (10 ** exponent)
+            return price * (10**exponent)
         except Exception:
             logger.exception("Failed to get SOL price from Pyth")
             return None
 
-    async def get_transaction_history(
-        self, address: str, limit: int = 20
-    ) -> list[dict]:
+    async def get_transaction_history(self, address: str, limit: int = 20) -> list[dict]:
         """Get recent transaction signatures for an address."""
         if not validate_solana_address(address):
             return []
         try:
             from solders.pubkey import Pubkey
+
             pubkey = Pubkey.from_string(address)
-            resp = await self.async_client.get_signatures_for_address(
-                pubkey, limit=limit
-            )
+            resp = await self.async_client.get_signatures_for_address(pubkey, limit=limit)
             return [
                 {
                     "signature": str(sig.signature),
@@ -296,15 +300,17 @@ class SolanaChainService:
         if token_info is None:
             return result
 
-        result.update({
-            "exists": True,
-            "mint_authority_active": token_info["mint_authority_active"],
-            "mint_authority": token_info["mint_authority"],
-            "freeze_authority_active": token_info["freeze_authority_active"],
-            "freeze_authority": token_info["freeze_authority"],
-            "supply": token_info["supply"],
-            "decimals": token_info["decimals"],
-        })
+        result.update(
+            {
+                "exists": True,
+                "mint_authority_active": token_info["mint_authority_active"],
+                "mint_authority": token_info["mint_authority"],
+                "freeze_authority_active": token_info["freeze_authority_active"],
+                "freeze_authority": token_info["freeze_authority"],
+                "supply": token_info["supply"],
+                "decimals": token_info["decimals"],
+            }
+        )
         return result
 
 

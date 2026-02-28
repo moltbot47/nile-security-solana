@@ -16,9 +16,7 @@ router = APIRouter()
 
 
 @router.get("", response_model=list[ContractResponse])
-async def list_contracts(
-    skip: int = 0, limit: int = 50, db: AsyncSession = Depends(get_db)
-):
+async def list_contracts(skip: int = 0, limit: int = 50, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Contract).offset(skip).limit(limit))
     return result.scalars().all()
 
@@ -63,9 +61,7 @@ async def get_nile_history(
 
 
 @router.get("/{contract_id}/vulnerabilities")
-async def get_contract_vulnerabilities(
-    contract_id: uuid.UUID, db: AsyncSession = Depends(get_db)
-):
+async def get_contract_vulnerabilities(contract_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
     result = await db.execute(
         select(Vulnerability)
         .where(Vulnerability.contract_id == contract_id)

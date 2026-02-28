@@ -25,7 +25,9 @@ logger = logging.getLogger(__name__)
 # Load exploit patterns once at module level
 _EXPLOIT_PATTERNS_PATH = (
     Path(__file__).resolve().parent.parent.parent.parent
-    / "data" / "exploit_patterns" / "solana_exploits.json"
+    / "data"
+    / "exploit_patterns"
+    / "solana_exploits.json"
 )
 _EXPLOIT_PATTERNS: list[dict] = []
 
@@ -145,9 +147,7 @@ class SolanaProgramAnalyzer:
             "exploit_matches": exploit_matches,
         }
 
-    async def _assess_name(
-        self, address: str, idl: dict | None, ecosystem: dict
-    ) -> NameInputs:
+    async def _assess_name(self, address: str, idl: dict | None, ecosystem: dict) -> NameInputs:
         """Build Name dimension inputs."""
         is_known = bool(await check_known_program(address))
         return NameInputs(
@@ -170,9 +170,7 @@ class SolanaProgramAnalyzer:
             unvalidated_accounts=idl_analysis.get("unvalidated_accounts", 0),
         )
 
-    def _assess_likeness(
-        self, exploit_matches: list[dict], idl_analysis: dict
-    ) -> LikenessInputs:
+    def _assess_likeness(self, exploit_matches: list[dict], idl_analysis: dict) -> LikenessInputs:
         """Build Likeness dimension inputs from pattern matching."""
         return LikenessInputs(
             static_analysis_findings=[],  # TODO: integrate Soteria/custom analyzer
@@ -180,9 +178,7 @@ class SolanaProgramAnalyzer:
             rug_pattern_similarity=0.0,
         )
 
-    def _assess_essence(
-        self, idl_analysis: dict, authority_info: dict | None
-    ) -> EssenceInputs:
+    def _assess_essence(self, idl_analysis: dict, authority_info: dict | None) -> EssenceInputs:
         """Build Essence dimension inputs."""
         upgrade_active = False
         if authority_info:
@@ -207,17 +203,19 @@ class SolanaProgramAnalyzer:
         for pattern in patterns:
             confidence = self._compute_pattern_confidence(pattern, idl_analysis, authority_info)
             if confidence > 0.3:
-                matches.append({
-                    "pattern_id": pattern["id"],
-                    "name": pattern["name"],
-                    "category": pattern["category"],
-                    "severity": pattern.get("severity", "medium"),
-                    "confidence": round(confidence, 2),
-                    "cwe": pattern.get("cwe"),
-                    "indicators_matched": self._matched_indicators(
-                        pattern, idl_analysis, authority_info
-                    ),
-                })
+                matches.append(
+                    {
+                        "pattern_id": pattern["id"],
+                        "name": pattern["name"],
+                        "category": pattern["category"],
+                        "severity": pattern.get("severity", "medium"),
+                        "confidence": round(confidence, 2),
+                        "cwe": pattern.get("cwe"),
+                        "indicators_matched": self._matched_indicators(
+                            pattern, idl_analysis, authority_info
+                        ),
+                    }
+                )
 
         return matches
 
@@ -298,15 +296,17 @@ class SolanaProgramAnalyzer:
                 if token_info.get("freeze_authority_active"):
                     indicators.append("Freeze authority active")
 
-                matches.append({
-                    "pattern_id": pattern["id"],
-                    "name": pattern["name"],
-                    "category": "rug_pull",
-                    "severity": "critical",
-                    "confidence": round(confidence, 2),
-                    "cwe": pattern.get("cwe"),
-                    "indicators_matched": indicators,
-                })
+                matches.append(
+                    {
+                        "pattern_id": pattern["id"],
+                        "name": pattern["name"],
+                        "category": "rug_pull",
+                        "severity": "critical",
+                        "confidence": round(confidence, 2),
+                        "cwe": pattern.get("cwe"),
+                        "indicators_matched": indicators,
+                    }
+                )
 
         return matches
 
@@ -333,7 +333,7 @@ class SolanaProgramAnalyzer:
         supply = token_info.get("supply", 0)
         decimals = token_info.get("decimals", 0)
         if supply > 0 and decimals > 0:
-            normalized = supply / (10 ** decimals)
+            normalized = supply / (10**decimals)
             if normalized < 1000:
                 score += 0.1
 

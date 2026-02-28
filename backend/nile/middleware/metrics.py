@@ -37,9 +37,7 @@ class _Metrics:
         lines.append("# TYPE nile_http_requests_total counter")
         for key, count in sorted(self.request_count.items()):
             method, path = key.split(" ", 1)
-            lines.append(
-                f'nile_http_requests_total{{method="{method}",path="{path}"}} {count}'
-            )
+            lines.append(f'nile_http_requests_total{{method="{method}",path="{path}"}} {count}')
 
         lines.append("# HELP nile_http_request_duration_seconds HTTP request duration")
         lines.append("# TYPE nile_http_request_duration_seconds summary")
@@ -48,12 +46,8 @@ class _Metrics:
             total = self.request_duration_sum[key]
             count = self.request_duration_count[key]
             label = f'method="{method}",path="{path}"'
-            lines.append(
-                f"nile_http_request_duration_seconds_sum{{{label}}} {total:.4f}"
-            )
-            lines.append(
-                f"nile_http_request_duration_seconds_count{{{label}}} {count}"
-            )
+            lines.append(f"nile_http_request_duration_seconds_sum{{{label}}} {total:.4f}")
+            lines.append(f"nile_http_request_duration_seconds_count{{{label}}} {count}")
 
         lines.append("# HELP nile_http_status_total HTTP responses by status code")
         lines.append("# TYPE nile_http_status_total counter")
@@ -66,9 +60,7 @@ class _Metrics:
 
         if self.scan_count > 0:
             avg_scan = self.scan_duration_sum / self.scan_count
-            lines.append(
-                "# HELP nile_scan_avg_duration_seconds Average scan duration"
-            )
+            lines.append("# HELP nile_scan_avg_duration_seconds Average scan duration")
             lines.append("# TYPE nile_scan_avg_duration_seconds gauge")
             lines.append(f"nile_scan_avg_duration_seconds {avg_scan:.4f}")
 
@@ -81,9 +73,7 @@ metrics = _Metrics()
 class MetricsMiddleware(BaseHTTPMiddleware):
     """Records request metrics and serves /metrics endpoint."""
 
-    async def dispatch(
-        self, request: Request, call_next: RequestResponseEndpoint
-    ) -> Response:
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         # Serve Prometheus metrics on /metrics
         if request.url.path == "/metrics":
             return PlainTextResponse(metrics.render(), media_type="text/plain")
@@ -95,9 +85,7 @@ class MetricsMiddleware(BaseHTTPMiddleware):
         # Normalize path to avoid high cardinality (strip UUIDs)
         path = request.url.path
         parts = path.split("/")
-        normalized = "/".join(
-            "{id}" if _looks_like_id(p) else p for p in parts
-        )
+        normalized = "/".join("{id}" if _looks_like_id(p) else p for p in parts)
 
         metrics.record(request.method, normalized, response.status_code, duration)
         return response

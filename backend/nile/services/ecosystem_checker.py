@@ -8,9 +8,19 @@ logger = logging.getLogger(__name__)
 
 # Known audit firms in Solana ecosystem
 KNOWN_AUDITORS = {
-    "ottersec", "sec3", "neodyme", "halborn", "trail_of_bits",
-    "quantstamp", "slowmist", "zellic", "kudelski", "certik",
-    "oak_security", "offside_labs", "mad_shield",
+    "ottersec",
+    "sec3",
+    "neodyme",
+    "halborn",
+    "trail_of_bits",
+    "quantstamp",
+    "slowmist",
+    "zellic",
+    "kudelski",
+    "certik",
+    "oak_security",
+    "offside_labs",
+    "mad_shield",
 }
 
 # Well-known verified Solana programs
@@ -65,6 +75,7 @@ async def check_program_age_days(program_address: str) -> int:
         block_time = oldest.get("block_time")
         if block_time:
             import time
+
             age_seconds = time.time() - block_time
             return max(0, int(age_seconds / 86400))
     except Exception:

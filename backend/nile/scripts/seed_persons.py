@@ -207,9 +207,7 @@ async def seed(db: AsyncSession) -> None:
     """Insert seed persons and soul tokens if they don't exist."""
     for data in SEED_PERSONS:
         # Check if person exists
-        existing = await db.execute(
-            select(Person).where(Person.slug == data["slug"])
-        )
+        existing = await db.execute(select(Person).where(Person.slug == data["slug"]))
         if existing.scalar_one_or_none():
             logger.info("Person '%s' already exists, skipping", data["slug"])
             continue

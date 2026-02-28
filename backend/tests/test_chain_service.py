@@ -4,6 +4,7 @@ from nile.services.chain_service import validate_solana_address
 
 # --- Address validation tests ---
 
+
 def test_valid_solana_address():
     # SPL Token Program
     assert validate_solana_address("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA") is True

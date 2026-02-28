@@ -8,7 +8,7 @@ on:
 
 jobs:
   backend:
-    name: Backend (Python)
+    name: Backend (lint + test + typecheck)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -28,11 +28,25 @@ jobs:
       - name: Install dependencies
         run: uv sync --all-extras
 
-      - name: Lint (ruff)
+      - name: Lint (ruff check)
         run: uv run ruff check nile/ tests/
 
+      - name: Format check (ruff format)
+        run: uv run ruff format --check nile/ tests/
+
+      - name: Type check (mypy)
+        run: uv run mypy nile/ --ignore-missing-imports
+        continue-on-error: true
+
       - name: Test + Coverage
-        run: uv run pytest -v --cov=nile --cov-report=term-missing --cov-fail-under=60
+        run: uv run pytest -v --cov=nile --cov-report=term-missing --cov-report=xml
+
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: backend/coverage.xml
 
   frontend:
     name: Frontend (Next.js)

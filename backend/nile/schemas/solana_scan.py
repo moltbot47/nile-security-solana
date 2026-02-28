@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 
 class SolanaScanRequest(BaseModel):
     """Request to scan a Solana program or token address."""
+
     program_address: str = Field(
         ...,
         min_length=32,
@@ -32,6 +33,7 @@ class ExploitMatch(BaseModel):
 
 class SolanaScanResponse(BaseModel):
     """Full scan result for a Solana program or token."""
+
     address: str
     analysis_type: str  # "program" or "token"
     total_score: float

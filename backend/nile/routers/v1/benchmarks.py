@@ -17,16 +17,12 @@ PUBLISHED_BASELINES = [
     BenchmarkBaseline(
         agent="gpt-5.3-codex", mode="exploit", score_pct=72.2, source="benchmark_published"
     ),
-    BenchmarkBaseline(
-        agent="gpt-5", mode="exploit", score_pct=31.9, source="benchmark_published"
-    ),
+    BenchmarkBaseline(agent="gpt-5", mode="exploit", score_pct=31.9, source="benchmark_published"),
 ]
 
 
 @router.get("", response_model=list[BenchmarkResponse])
-async def list_benchmarks(
-    skip: int = 0, limit: int = 50, db: AsyncSession = Depends(get_db)
-):
+async def list_benchmarks(skip: int = 0, limit: int = 50, db: AsyncSession = Depends(get_db)):
     result = await db.execute(
         select(BenchmarkRun).order_by(BenchmarkRun.started_at.desc()).offset(skip).limit(limit)
     )

@@ -57,9 +57,7 @@ async def send_alert(
     }
 
     if fields:
-        embed["fields"] = [
-            {"name": k, "value": v, "inline": True} for k, v in fields.items()
-        ]
+        embed["fields"] = [{"name": k, "value": v, "inline": True} for k, v in fields.items()]
 
     payload = {"embeds": [embed]}
 

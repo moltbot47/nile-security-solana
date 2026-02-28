@@ -254,9 +254,7 @@ async def run_risk_checks(
     alerts: list[dict] = []
 
     # 1. Wash trading check
-    wash = await check_wash_trading(
-        db, soul_token_id=soul_token_id, trader_address=trader_address
-    )
+    wash = await check_wash_trading(db, soul_token_id=soul_token_id, trader_address=trader_address)
     if wash:
         alerts.append(wash)
 
@@ -302,17 +300,14 @@ async def get_token_risk_summary(
     hour_ago = now - timedelta(hours=1)
 
     # Recent trade stats
-    stats_query = (
-        select(
-            func.count(Trade.id).label("trade_count"),
-            func.count(func.distinct(Trade.trader_address)).label("unique_traders"),
-            func.sum(Trade.sol_amount).label("total_volume_sol"),
-        )
-        .where(
-            and_(
-                Trade.soul_token_id == soul_token_id,
-                Trade.created_at >= hour_ago,
-            )
+    stats_query = select(
+        func.count(Trade.id).label("trade_count"),
+        func.count(func.distinct(Trade.trader_address)).label("unique_traders"),
+        func.sum(Trade.sol_amount).label("total_volume_sol"),
+    ).where(
+        and_(
+            Trade.soul_token_id == soul_token_id,
+            Trade.created_at >= hour_ago,
         )
     )
     result = await db.execute(stats_query)

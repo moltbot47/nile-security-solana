@@ -65,13 +65,15 @@ async def query_patterns(
             continue
         if severity and meta.get("severity") != severity:
             continue
-        patterns.append({
-            "id": e.id,
-            "category": meta.get("category"),
-            "severity": meta.get("severity"),
-            "pattern": meta.get("pattern", {}),
-            "discovered_by": str(e.actor_id) if e.actor_id else None,
-            "created_at": e.created_at.isoformat() if e.created_at else "",
-        })
+        patterns.append(
+            {
+                "id": e.id,
+                "category": meta.get("category"),
+                "severity": meta.get("severity"),
+                "pattern": meta.get("pattern", {}),
+                "discovered_by": str(e.actor_id) if e.actor_id else None,
+                "created_at": e.created_at.isoformat() if e.created_at else "",
+            }
+        )
 
     return patterns
