@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { WalletProvider } from "@/providers/WalletProvider";
 import "@/styles/globals.css";
@@ -15,7 +16,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <WalletProvider>
           <div className="flex min-h-screen">
             <Sidebar />
-            <main className="flex-1 p-8 overflow-auto">{children}</main>
+            <main className="flex-1 p-8 overflow-auto">
+              <ErrorBoundary>{children}</ErrorBoundary>
+            </main>
           </div>
         </WalletProvider>
       </body>

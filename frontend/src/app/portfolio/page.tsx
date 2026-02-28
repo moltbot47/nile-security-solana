@@ -16,7 +16,8 @@ function formatUSD(value: number): string {
   return `$${value.toFixed(2)}`;
 }
 
-const SOL_PRICE = 250; // placeholder
+const SOL_PRICE_FALLBACK = 250;
+const SOL_PRICE_API = "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd";
 
 export default function PortfolioPage() {
   const { publicKey, connected: walletConnected } = useWallet();
@@ -25,6 +26,17 @@ export default function PortfolioPage() {
   const [holdings, setHoldings] = useState<PortfolioItem[]>([]);
   const [trades, setTrades] = useState<Trade[]>([]);
   const [loading, setLoading] = useState(false);
+  const [solPrice, setSolPrice] = useState(SOL_PRICE_FALLBACK);
+
+  // Fetch live SOL price
+  useEffect(() => {
+    fetch(SOL_PRICE_API)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.solana?.usd) setSolPrice(data.solana.usd);
+      })
+      .catch(() => {}); // Keep fallback on error
+  }, []);
 
   // Auto-load when Phantom wallet connects
   useEffect(() => {
@@ -102,7 +114,7 @@ export default function PortfolioPage() {
               <p className="text-xs text-gray-500">Total Value</p>
               <p className="text-xl font-mono mt-1">{formatSOL(totalValue)}</p>
               <p className="text-xs text-gray-500">
-                ~{formatUSD(totalValue * SOL_PRICE)}
+                ~{formatUSD(totalValue * solPrice)}
               </p>
             </div>
             <div className="rounded-xl border border-gray-800 p-4">
