@@ -297,3 +297,32 @@ export interface RiskSummary {
     total_volume_sol: number;
   };
 }
+
+// --- Solana Scan Types ---
+
+export interface SolanaScanScoreBreakdown {
+  name: number;
+  image: number;
+  likeness: number;
+  essence: number;
+}
+
+export interface ExploitMatch {
+  pattern_id: string;
+  name: string;
+  category: string;
+  severity: string;
+  confidence: number;
+  cwe: string | null;
+  indicators_matched: string[];
+}
+
+export interface SolanaScanResult {
+  address: string;
+  analysis_type: "program" | "token";
+  total_score: number;
+  grade: string;
+  scores: SolanaScanScoreBreakdown;
+  details: Record<string, Record<string, unknown>>;
+  exploit_matches: ExploitMatch[];
+}

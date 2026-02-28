@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { useWallet } from "@solana/wallet-adapter-react";
 import { api } from "@/lib/api";
 import type { PortfolioItem, Trade } from "@/lib/types";
 
@@ -19,11 +19,21 @@ function formatUSD(value: number): string {
 const SOL_PRICE = 250; // placeholder
 
 export default function PortfolioPage() {
+  const { publicKey, connected: walletConnected } = useWallet();
   const [wallet, setWallet] = useState("");
   const [connected, setConnected] = useState(false);
   const [holdings, setHoldings] = useState<PortfolioItem[]>([]);
   const [trades, setTrades] = useState<Trade[]>([]);
   const [loading, setLoading] = useState(false);
+
+  // Auto-load when Phantom wallet connects
+  useEffect(() => {
+    if (walletConnected && publicKey) {
+      const address = publicKey.toBase58();
+      setWallet(address);
+      loadPortfolio(address);
+    }
+  }, [walletConnected, publicKey]);
 
   const loadPortfolio = async (address: string) => {
     setLoading(true);
@@ -261,7 +271,9 @@ export default function PortfolioPage() {
       {!connected && (
         <div className="rounded-xl border border-gray-800 p-12 text-center">
           <p className="text-gray-400 text-lg mb-2">
-            Enter your wallet address to view your portfolio
+            {walletConnected
+              ? "Loading your portfolio..."
+              : "Connect your Phantom wallet or enter an address"}
           </p>
           <p className="text-gray-500 text-sm">
             Track holdings, P&amp;L, and trade history across all soul tokens
