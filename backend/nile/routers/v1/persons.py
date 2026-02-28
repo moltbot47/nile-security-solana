@@ -7,6 +7,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from nile.core.auth import Agent, get_current_agent
 from nile.core.database import get_db
 from nile.models.oracle_event import OracleEvent
 from nile.models.person import Person
@@ -27,7 +28,9 @@ router = APIRouter()
 
 @router.post("", response_model=PersonResponse, status_code=201)
 async def create_person(
-    req: PersonCreate, db: AsyncSession = Depends(get_db)
+    req: PersonCreate,
+    agent: Agent = Depends(get_current_agent),
+    db: AsyncSession = Depends(get_db),
 ) -> PersonResponse:
     """Create a new person profile."""
     existing = await db.execute(select(Person).where(Person.slug == req.slug))
@@ -47,7 +50,12 @@ async def create_person(
     db.add(person)
     await db.flush()
     await db.commit()
-    await db.refresh(person)
+
+    # Re-query with eager loading so _to_response can access soul_token
+    result = await db.execute(
+        select(Person).where(Person.id == person.id).options(selectinload(Person.soul_token))
+    )
+    person = result.scalar_one()
     return _to_response(person)
 
 
@@ -123,11 +131,7 @@ async def get_person(
     db: AsyncSession = Depends(get_db),
 ) -> PersonResponse:
     """Get person profile with NILE scores."""
-    query = (
-        select(Person)
-        .where(Person.id == person_id)
-        .options(selectinload(Person.soul_token))
-    )
+    query = select(Person).where(Person.id == person_id).options(selectinload(Person.soul_token))
     result = await db.execute(query)
     person = result.scalar_one_or_none()
     if not person:
@@ -139,6 +143,7 @@ async def get_person(
 async def update_person(
     person_id: uuid.UUID,
     req: PersonUpdate,
+    agent: Agent = Depends(get_current_agent),
     db: AsyncSession = Depends(get_db),
 ) -> PersonResponse:
     """Update person profile."""
@@ -154,7 +159,12 @@ async def update_person(
 
     await db.flush()
     await db.commit()
-    await db.refresh(person)
+
+    # Re-query with eager loading so _to_response can access soul_token
+    result = await db.execute(
+        select(Person).where(Person.id == person.id).options(selectinload(Person.soul_token))
+    )
+    person = result.scalar_one()
     return _to_response(person)
 
 
@@ -183,10 +193,7 @@ async def oracle_events(
     db: AsyncSession = Depends(get_db),
 ) -> list[OracleEventResponse]:
     """Get oracle events for a person."""
-    query = (
-        select(OracleEvent)
-        .where(OracleEvent.person_id == person_id)
-    )
+    query = select(OracleEvent).where(OracleEvent.person_id == person_id)
     if status:
         query = query.where(OracleEvent.status == status)
     query = query.order_by(OracleEvent.created_at.desc()).limit(limit)

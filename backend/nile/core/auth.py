@@ -2,6 +2,7 @@
 
 import hashlib
 import secrets
+import uuid as _uuid
 from datetime import UTC, datetime, timedelta
 
 import jwt
@@ -61,7 +62,7 @@ async def get_current_agent(
     if agent is None and bearer:
         try:
             payload = decode_agent_token(bearer.credentials)
-            agent_id = payload["sub"]
+            agent_id = _uuid.UUID(payload["sub"])
             result = await db.execute(select(Agent).where(Agent.id == agent_id))
             agent = result.scalar_one_or_none()
         except (jwt.ExpiredSignatureError, jwt.InvalidTokenError) as err:

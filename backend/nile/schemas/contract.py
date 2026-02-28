@@ -3,7 +3,7 @@
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class ContractCreate(BaseModel):
@@ -24,7 +24,7 @@ class ContractResponse(BaseModel):
     chain: str
     compiler_version: str | None
     is_verified: bool
-    metadata: dict
+    metadata: dict = Field(default={}, validation_alias="metadata_")
     created_at: datetime
     updated_at: datetime
 
