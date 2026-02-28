@@ -6,6 +6,7 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     app_name: str = "NILE Security (Solana)"
     debug: bool = False
+    env: str = "development"  # development | staging | production
 
     # Database
     database_url: str = "postgresql+asyncpg://nile:nile@localhost:5432/nile_solana"
@@ -54,3 +55,15 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+# Warn if using default JWT secret in non-development environments
+if settings.jwt_secret == "nile-dev-secret-change-me" and settings.env != "development":  # noqa: S105
+    import logging
+    import warnings
+
+    _msg = (
+        "SECURITY WARNING: Using default JWT secret in %s environment. "
+        "Set NILE_JWT_SECRET to a strong random value."
+    )
+    logging.getLogger(__name__).critical(_msg, settings.env)
+    warnings.warn(_msg % settings.env, stacklevel=1)

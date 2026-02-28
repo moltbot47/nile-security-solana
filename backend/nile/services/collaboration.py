@@ -66,7 +66,7 @@ async def detect_to_patch_pipeline(
         message_type="request",
         payload={
             "action": "patch_needed",
-            "contract_id": contract_id,
+            "contract_id": str(contract_id),
             "scan_job_id": str(job.id),
             "vulnerability": vulnerability_details,
         },
@@ -101,7 +101,7 @@ async def detect_to_exploit_pipeline(
         message_type="request",
         payload={
             "action": "exploit_verify",
-            "contract_id": contract_id,
+            "contract_id": str(contract_id),
             "scan_job_id": str(job.id),
             "vulnerability": vulnerability_details,
         },
@@ -136,7 +136,7 @@ async def patch_verify_pipeline(
         message_type="request",
         payload={
             "action": "verify_patch",
-            "contract_id": contract_id,
+            "contract_id": str(contract_id),
             "scan_job_id": str(job.id),
             "patch_details": patch_details,
         },
