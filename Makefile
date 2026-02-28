@@ -1,22 +1,33 @@
-.PHONY: dev lint test typecheck build deploy
+.PHONY: dev lint test test-unit test-cov typecheck build up down deploy migrate seed ci
 
 # Development
 dev:
 	@echo "Starting backend..."
 	cd backend && uv run uvicorn nile.app:app --reload --port 8000 &
 	@echo "Starting frontend..."
-	cd frontend && bun dev &
+	cd frontend && npm run dev &
 
 # Quality
 lint:
 	cd backend && uv run ruff check nile/ tests/
-	cd frontend && npx biome check src/ 2>/dev/null || true
+	cd frontend && npx tsc --noEmit
 
 test:
 	cd backend && uv run pytest -v --cov=nile
 
+test-unit:
+	cd backend && uv run pytest -v -x
+
+test-cov:
+	cd backend && uv run pytest -v --cov=nile --cov-report=term-missing --cov-fail-under=60
+
 typecheck:
-	cd frontend && npx tsc --noEmit 2>/dev/null || true
+	cd frontend && npx tsc --noEmit
+
+# Full CI check (runs locally)
+ci: lint test-cov typecheck
+	cd frontend && npx next build
+	@echo "CI checks passed."
 
 # Docker
 build:
