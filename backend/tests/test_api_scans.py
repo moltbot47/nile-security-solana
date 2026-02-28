@@ -1,61 +1,77 @@
-"""Tests for the Solana scan API endpoint schemas."""
+"""Tests for scan job API endpoints."""
 
-from nile.schemas.solana_scan import (
-    ExploitMatch,
-    SolanaScanRequest,
-    SolanaScanResponse,
-    SolanaScanScoreBreakdown,
-)
-from nile.services.chain_service import validate_solana_address
+import uuid
 
+import pytest
 
-def test_scan_request_valid():
-    req = SolanaScanRequest(program_address="TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
-    assert req.program_address == "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+from nile.models.contract import Contract
+from nile.models.scan_job import ScanJob
 
 
-def test_scan_request_rejects_short():
-    import pytest
-    from pydantic import ValidationError
+@pytest.mark.asyncio
+class TestListScans:
+    async def test_empty_list(self, client):
+        resp = await client.get("/api/v1/scans")
+        assert resp.status_code == 200
+        assert resp.json() == []
 
-    with pytest.raises(ValidationError):
-        SolanaScanRequest(program_address="abc")
+    async def test_list_with_scans(self, client, db_session):
+        contract = Contract(name="Test", chain="solana")
+        db_session.add(contract)
+        await db_session.flush()
 
+        db_session.add(
+            ScanJob(
+                contract_id=contract.id,
+                mode="detect",
+                agent="test-agent",
+                status="queued",
+            )
+        )
+        await db_session.flush()
 
-def test_scan_response_construction():
-    resp = SolanaScanResponse(
-        address="TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
-        analysis_type="program",
-        total_score=85.5,
-        grade="A",
-        scores=SolanaScanScoreBreakdown(name=80, image=90, likeness=85, essence=87),
-        details={"name": {}, "image": {}, "likeness": {}, "essence": {}},
-        exploit_matches=[],
-    )
-    assert resp.total_score == 85.5
-    assert resp.grade == "A"
-    assert resp.scores.name == 80
-
-
-def test_exploit_match_schema():
-    match = ExploitMatch(
-        pattern_id="SOL-008",
-        name="Missing Signer Check",
-        category="access_control",
-        severity="critical",
-        confidence=0.75,
-        cwe="CWE-862",
-        indicators_matched=["Missing #[account(signer)] in Anchor"],
-    )
-    assert match.confidence == 0.75
-    assert match.severity == "critical"
+        resp = await client.get("/api/v1/scans")
+        assert resp.status_code == 200
+        assert len(resp.json()) == 1
 
 
-def test_address_validation_in_scan_context():
-    # Valid Solana addresses that the scan endpoint should accept
-    assert validate_solana_address("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA") is True
-    assert validate_solana_address("11111111111111111111111111111111") is True
+@pytest.mark.asyncio
+class TestCreateScan:
+    async def test_create_scan(self, client, db_session):
+        contract = Contract(name="Test", chain="solana")
+        db_session.add(contract)
+        await db_session.flush()
 
-    # Invalid addresses that the scan endpoint should reject
-    assert validate_solana_address("0xdead") is False
-    assert validate_solana_address("") is False
+        resp = await client.post(
+            "/api/v1/scans",
+            json={
+                "contract_id": str(contract.id),
+                "mode": "detect",
+                "agent": "test-agent",
+            },
+        )
+        assert resp.status_code == 201
+
+
+@pytest.mark.asyncio
+class TestGetScan:
+    async def test_not_found(self, client):
+        resp = await client.get(f"/api/v1/scans/{uuid.uuid4()}")
+        assert resp.status_code == 404
+
+    async def test_get_existing(self, client, db_session):
+        contract = Contract(name="Test", chain="solana")
+        db_session.add(contract)
+        await db_session.flush()
+
+        job = ScanJob(
+            contract_id=contract.id,
+            mode="detect",
+            agent="test-agent",
+            status="queued",
+        )
+        db_session.add(job)
+        await db_session.flush()
+
+        resp = await client.get(f"/api/v1/scans/{job.id}")
+        assert resp.status_code == 200

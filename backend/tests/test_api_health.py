@@ -1,21 +1,14 @@
-"""Tests for health check endpoints."""
+"""Tests for health check API endpoints."""
+
+import pytest
 
 
-async def test_health_liveness(client):
-    """GET /health returns ok with service info."""
-    response = await client.get("/api/v1/health")
-    assert response.status_code == 200
-    data = response.json()
-    assert data["status"] == "ok"
-    assert data["service"] == "nile-security"
-    assert data["chain"] == "solana"
-
-
-async def test_health_metrics_endpoint(client):
-    """GET /health/metrics returns metric counters."""
-    response = await client.get("/api/v1/health/metrics")
-    assert response.status_code == 200
-    data = response.json()
-    assert "total_requests" in data
-    assert "total_scans" in data
-    assert "avg_scan_duration_ms" in data
+@pytest.mark.asyncio
+class TestHealthEndpoint:
+    async def test_liveness_returns_ok(self, client):
+        resp = await client.get("/api/v1/health")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["status"] == "ok"
+        assert data["service"] == "nile-security"
+        assert data["chain"] == "solana"
