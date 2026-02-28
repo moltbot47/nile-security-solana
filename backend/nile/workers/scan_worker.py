@@ -12,6 +12,7 @@ from nile.core.event_bus import publish_event
 from nile.models.contract import Contract
 from nile.models.nile_score import NileScore
 from nile.models.scan_job import ScanJob
+from nile.services.onchain_writer import submit_score_onchain
 from nile.services.program_analyzer import program_analyzer
 
 logger = logging.getLogger(__name__)
@@ -92,6 +93,18 @@ async def process_scan_job(db: AsyncSession, job: ScanJob) -> None:
         job.finished_at = datetime.now(UTC)
         await db.flush()
 
+        # Optionally persist score on-chain (feature-flagged)
+        tx_sig = await submit_score_onchain(
+            program_address=contract.address,
+            name_score=int(score_result.name_score),
+            image_score=int(score_result.image_score),
+            likeness_score=int(score_result.likeness_score),
+            essence_score=int(score_result.essence_score),
+            details_uri=f"nile://{job.id}",
+        )
+        if tx_sig:
+            job.result["onchain_tx"] = tx_sig
+
         await publish_event(
             event_type="scan.completed",
             target_id=str(contract.id),
@@ -99,6 +112,7 @@ async def process_scan_job(db: AsyncSession, job: ScanJob) -> None:
                 "scan_job_id": str(job.id),
                 "nile_score": score_result.total_score,
                 "grade": score_result.grade,
+                "onchain_tx": tx_sig,
             },
             db=db,
         )

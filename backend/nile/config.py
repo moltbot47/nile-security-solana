@@ -33,7 +33,8 @@ class Settings(BaseSettings):
     solana_rpc_url: str = "https://api.devnet.solana.com"
     solana_network: str = "devnet"  # devnet | testnet | mainnet-beta
     deployer_private_key: str = ""
-    program_id: str = ""  # Main NILE program (factory + router)
+    deployer_keypair_path: str = ""  # Path to keypair JSON (alternative to private key)
+    program_id: str = ""  # Main NILE program on Solana
     oracle_program_id: str = ""  # Oracle consensus program
     treasury_program_id: str = ""  # Fee management program
 
