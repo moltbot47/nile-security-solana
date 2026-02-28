@@ -28,6 +28,7 @@ pub fn handler(
     require!(name.len() <= 64, NileError::NameTooLong);
 
     let profile = &mut ctx.accounts.profile;
+    profile.version = 1;
     profile.program_address = program_address;
     profile.name = name;
     profile.registrant = ctx.accounts.registrant.key();

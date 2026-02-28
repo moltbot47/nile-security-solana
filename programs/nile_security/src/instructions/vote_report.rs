@@ -33,6 +33,12 @@ pub fn handler(ctx: Context<VoteReport>, approve: bool) -> Result<()> {
     require!(!ctx.accounts.report.finalized, NileError::ReportAlreadyFinalized);
     require!(ctx.accounts.agent_profile.is_active, NileError::AgentSuspended);
 
+    // Prevent submitter from double-voting (they auto-confirmed on submission)
+    require!(
+        ctx.accounts.agent.key() != ctx.accounts.report.submitter,
+        NileError::SelfVoteNotAllowed
+    );
+
     let report = &mut ctx.accounts.report;
 
     // Record vote
@@ -56,6 +62,7 @@ pub fn handler(ctx: Context<VoteReport>, approve: bool) -> Result<()> {
 
     // Record the vote
     let vote = &mut ctx.accounts.vote_record;
+    vote.version = 1;
     vote.report = ctx.accounts.report.key();
     vote.agent = ctx.accounts.agent.key();
     vote.approved = approve;

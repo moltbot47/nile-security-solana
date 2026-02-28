@@ -57,6 +57,7 @@ pub fn handler(
     let quorum = ((agent_count as u64 * 2 + 2) / 3) as u8; // ceil(2/3)
 
     let report = &mut ctx.accounts.report;
+    report.version = 1;
     report.program_address = program_address;
     report.submitter = ctx.accounts.agent.key();
     report.event_type = event_type;

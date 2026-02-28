@@ -4,6 +4,7 @@ use anchor_lang::prelude::*;
 #[account]
 #[derive(InitSpace)]
 pub struct NileAuthority {
+    pub version: u8,
     pub admin: Pubkey,
     pub agent_count: u32,
     pub total_scores_submitted: u64,
@@ -15,6 +16,7 @@ pub struct NileAuthority {
 #[account]
 #[derive(InitSpace)]
 pub struct ProgramProfile {
+    pub version: u8,
     pub program_address: Pubkey,
     #[max_len(64)]
     pub name: String,
@@ -43,6 +45,7 @@ pub struct ProgramProfile {
 #[account]
 #[derive(InitSpace)]
 pub struct AgentProfile {
+    pub version: u8,
     pub agent_address: Pubkey,
     pub authorized_by: Pubkey,
     pub is_active: bool,
@@ -58,6 +61,7 @@ pub struct AgentProfile {
 #[account]
 #[derive(InitSpace)]
 pub struct OracleReport {
+    pub version: u8,
     pub program_address: Pubkey,
     pub submitter: Pubkey,
 
@@ -83,6 +87,7 @@ pub struct OracleReport {
 #[account]
 #[derive(InitSpace)]
 pub struct VoteRecord {
+    pub version: u8,
     pub report: Pubkey,
     pub agent: Pubkey,
     pub approved: bool,

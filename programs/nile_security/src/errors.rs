@@ -31,4 +31,10 @@ pub enum NileError {
 
     #[msg("Details URI too long (max 200 chars)")]
     DetailsTooLong,
+
+    #[msg("Cannot vote on your own report")]
+    SelfVoteNotAllowed,
+
+    #[msg("Arithmetic overflow")]
+    Overflow,
 }

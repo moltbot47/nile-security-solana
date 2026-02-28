@@ -1,5 +1,6 @@
 use anchor_lang::prelude::*;
 use crate::state::{AgentProfile, NileAuthority};
+use crate::errors::NileError;
 
 #[derive(Accounts)]
 #[instruction(agent: Pubkey)]
@@ -29,9 +30,13 @@ pub struct AuthorizeAgent<'info> {
 
 pub fn handler(ctx: Context<AuthorizeAgent>, agent: Pubkey) -> Result<()> {
     let authority = &mut ctx.accounts.authority;
-    authority.agent_count += 1;
+    authority.agent_count = authority
+        .agent_count
+        .checked_add(1)
+        .ok_or(NileError::Overflow)?;
 
     let profile = &mut ctx.accounts.agent_profile;
+    profile.version = 1;
     profile.agent_address = agent;
     profile.authorized_by = ctx.accounts.admin.key();
     profile.is_active = true;

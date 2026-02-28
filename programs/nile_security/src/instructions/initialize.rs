@@ -20,6 +20,7 @@ pub struct Initialize<'info> {
 
 pub fn handler(ctx: Context<Initialize>) -> Result<()> {
     let authority = &mut ctx.accounts.authority;
+    authority.version = 1;
     authority.admin = ctx.accounts.admin.key();
     authority.agent_count = 0;
     authority.total_scores_submitted = 0;
