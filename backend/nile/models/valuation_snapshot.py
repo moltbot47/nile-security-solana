@@ -3,8 +3,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Numeric, String, func
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy import JSON, DateTime, ForeignKey, Numeric, String, Uuid, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from nile.models.base import Base, UUIDMixin
@@ -13,9 +12,7 @@ from nile.models.base import Base, UUIDMixin
 class ValuationSnapshot(UUIDMixin, Base):
     __tablename__ = "valuation_snapshots"
 
-    person_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("persons.id"), index=True
-    )
+    person_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("persons.id"), index=True)
 
     # NILE sub-scores for human valuation (0-100)
     name_score: Mapped[float] = mapped_column(Numeric(5, 2))
@@ -28,13 +25,11 @@ class ValuationSnapshot(UUIDMixin, Base):
     fair_value_usd: Mapped[float] = mapped_column(Numeric(16, 4), default=0)
 
     # What triggered this snapshot
-    trigger_type: Mapped[str] = mapped_column(
-        String(32)
-    )  # scheduled, oracle_event, manual
-    trigger_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
+    trigger_type: Mapped[str] = mapped_column(String(32))  # scheduled, oracle_event, manual
+    trigger_id: Mapped[uuid.UUID | None] = mapped_column(Uuid)
 
     # Detailed breakdown
-    score_details: Mapped[dict] = mapped_column(JSONB, default=dict)
+    score_details: Mapped[dict] = mapped_column(JSON, default=dict)
 
     computed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), index=True

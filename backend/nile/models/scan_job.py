@@ -3,8 +3,7 @@
 import uuid
 from datetime import UTC, datetime
 
-from sqlalchemy import DateTime, ForeignKey, Integer, Numeric, String, Text, func
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy import JSON, DateTime, ForeignKey, Integer, Numeric, String, Text, Uuid, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from nile.models.base import Base, UUIDMixin
@@ -14,7 +13,7 @@ class ScanJob(UUIDMixin, Base):
     __tablename__ = "scan_jobs"
 
     contract_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("contracts.id"), nullable=False, index=True
+        Uuid, ForeignKey("contracts.id"), nullable=False, index=True
     )
 
     status: Mapped[str] = mapped_column(String(16), default="queued", index=True)
@@ -22,11 +21,11 @@ class ScanJob(UUIDMixin, Base):
     agent: Mapped[str] = mapped_column(String(32), nullable=False)
 
     # Configuration
-    config: Mapped[dict] = mapped_column(JSONB, default=dict)
+    config: Mapped[dict] = mapped_column(JSON, default=dict)
     hint_level: Mapped[str] = mapped_column(String(8), default="none")
 
     # Results
-    result: Mapped[dict | None] = mapped_column(JSONB)
+    result: Mapped[dict | None] = mapped_column(JSON)
     result_error: Mapped[str | None] = mapped_column(Text)
 
     # Timing

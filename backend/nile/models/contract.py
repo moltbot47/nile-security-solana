@@ -1,7 +1,6 @@
 """Contract model — the 'Name' identity of each smart contract."""
 
-from sqlalchemy import Boolean, String, Text
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import JSON, Boolean, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from nile.models.base import Base, TimestampMixin, UUIDMixin
@@ -16,7 +15,7 @@ class Contract(UUIDMixin, TimestampMixin, Base):
     chain: Mapped[str] = mapped_column(String(32), default="solana")
     compiler_version: Mapped[str | None] = mapped_column(String(32))
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
-    metadata_: Mapped[dict] = mapped_column("metadata", JSONB, default=dict)
+    metadata_: Mapped[dict] = mapped_column("metadata", JSON, default=dict)
 
     # Relationships
     nile_scores = relationship("NileScore", back_populates="contract", lazy="selectin")

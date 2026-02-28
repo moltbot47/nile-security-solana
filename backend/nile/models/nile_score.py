@@ -3,8 +3,7 @@
 import uuid
 from datetime import UTC, datetime
 
-from sqlalchemy import DateTime, ForeignKey, Numeric, String, func
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy import JSON, DateTime, ForeignKey, Numeric, String, Uuid, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from nile.models.base import Base, UUIDMixin
@@ -14,7 +13,7 @@ class NileScore(UUIDMixin, Base):
     __tablename__ = "nile_scores"
 
     contract_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("contracts.id"), nullable=False, index=True
+        Uuid, ForeignKey("contracts.id"), nullable=False, index=True
     )
 
     # Composite NILE score (0-100)
@@ -27,11 +26,11 @@ class NileScore(UUIDMixin, Base):
     essence_score: Mapped[float] = mapped_column(Numeric(5, 2), nullable=False)
 
     # Breakdown details
-    score_details: Mapped[dict] = mapped_column(JSONB, default=dict)
+    score_details: Mapped[dict] = mapped_column(JSON, default=dict)
 
     # Trigger info
     trigger_type: Mapped[str] = mapped_column(String(32), nullable=False)
-    trigger_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
+    trigger_id: Mapped[uuid.UUID | None] = mapped_column(Uuid)
 
     computed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

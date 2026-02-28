@@ -2,8 +2,7 @@
 
 from datetime import datetime
 
-from sqlalchemy import DateTime, Numeric, String, Text
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import JSON, DateTime, Numeric, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from nile.models.base import Base, TimestampMixin, UUIDMixin
@@ -29,11 +28,11 @@ class Person(UUIDMixin, TimestampMixin, Base):
     category: Mapped[str] = mapped_column(
         String(64), default="general", index=True
     )  # athlete, creator, musician, entrepreneur, etc.
-    tags: Mapped[list] = mapped_column(JSONB, default=list)
+    tags: Mapped[list] = mapped_column(JSON, default=list)
 
     # Social links
     social_links: Mapped[dict] = mapped_column(
-        JSONB, default=dict
+        JSON, default=dict
     )  # {"twitter": "...", "instagram": "...", etc.}
 
     # NILE Valuation Scores (human NIL context, 0-100 each)

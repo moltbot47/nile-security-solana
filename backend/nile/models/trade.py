@@ -2,8 +2,7 @@
 
 import uuid
 
-from sqlalchemy import ForeignKey, Integer, Numeric, String
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import ForeignKey, Integer, Numeric, String, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from nile.models.base import Base, TimestampMixin, UUIDMixin
@@ -12,9 +11,7 @@ from nile.models.base import Base, TimestampMixin, UUIDMixin
 class Trade(UUIDMixin, TimestampMixin, Base):
     __tablename__ = "trades"
 
-    soul_token_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("soul_tokens.id"), index=True
-    )
+    soul_token_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("soul_tokens.id"), index=True)
 
     # Trade details
     side: Mapped[str] = mapped_column(String(4), nullable=False)  # buy or sell

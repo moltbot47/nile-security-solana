@@ -1,7 +1,23 @@
-"""Test configuration and shared fixtures for NILE Security tests."""
+"""Test configuration and shared fixtures for NILE Security tests.
+
+Provides:
+- Async SQLite in-memory DB with per-test isolation (savepoint + rollback)
+- httpx AsyncClient wired to the FastAPI app with DB override
+- Scorer input fixtures for unit tests
+- IDL and token info fixtures
+"""
+
+import uuid
+from collections.abc import AsyncGenerator
 
 import pytest
+from httpx import ASGITransport, AsyncClient
+from sqlalchemy import event
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
+from nile.app import create_app
+from nile.core.database import get_db
+from nile.models.base import Base
 from nile.services.nile_scorer import (
     EssenceInputs,
     ImageInputs,
@@ -9,7 +25,112 @@ from nile.services.nile_scorer import (
     NameInputs,
 )
 
-# --- Scorer Fixtures ---
+# ---------------------------------------------------------------------------
+# Database fixtures — async SQLite with per-test savepoint isolation
+# ---------------------------------------------------------------------------
+
+TEST_DATABASE_URL = "sqlite+aiosqlite://"
+
+
+@pytest.fixture(scope="session")
+def anyio_backend():
+    return "asyncio"
+
+
+@pytest.fixture(scope="session")
+async def engine():
+    """Create a single async engine for the entire test session."""
+    eng = create_async_engine(TEST_DATABASE_URL, echo=False)
+    async with eng.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    yield eng
+    async with eng.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+    await eng.dispose()
+
+
+@pytest.fixture
+async def db_session(engine) -> AsyncGenerator[AsyncSession, None]:
+    """Per-test async session with savepoint rollback for isolation.
+
+    Each test gets a nested transaction (SAVEPOINT) that is rolled back
+    after the test completes, so no test data leaks between tests.
+    """
+    session_factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    async with engine.connect() as conn:
+        trans = await conn.begin()
+        session = session_factory(bind=conn)
+
+        # Use nested transactions so session.commit() creates SAVEPOINTs
+        nested = await conn.begin_nested()
+
+        @event.listens_for(session.sync_session, "after_transaction_end")
+        def restart_savepoint(sess, transaction):
+            nonlocal nested
+            if transaction.nested and not transaction._parent.nested:
+                nested = conn.sync_connection.begin_nested()
+
+        yield session
+
+        await session.close()
+        await trans.rollback()
+
+
+# ---------------------------------------------------------------------------
+# HTTP client fixture — wired to FastAPI with DB override
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
+    """httpx AsyncClient with the test DB session injected."""
+    app = create_app()
+
+    async def override_get_db():
+        yield db_session
+
+    app.dependency_overrides[get_db] = override_get_db
+
+    async with AsyncClient(
+        transport=ASGITransport(app=app),
+        base_url="http://testserver",
+    ) as ac:
+        yield ac
+
+    app.dependency_overrides.clear()
+
+
+# ---------------------------------------------------------------------------
+# Factory helpers
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def sample_contract_data():
+    """Dict suitable for creating a Contract via API or ORM."""
+    return {
+        "name": "Test Token Program",
+        "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+        "chain": "solana",
+        "is_verified": True,
+    }
+
+
+@pytest.fixture
+def sample_agent_data():
+    """Dict suitable for creating an Agent via ORM."""
+    return {
+        "name": f"test-agent-{uuid.uuid4().hex[:8]}",
+        "owner_id": "test-owner",
+        "capabilities": ["detect"],
+        "status": "active",
+        "api_key_hash": "fakehash",
+    }
+
+
+# ---------------------------------------------------------------------------
+# Scorer fixtures (unit tests, no DB needed)
+# ---------------------------------------------------------------------------
 
 
 @pytest.fixture
@@ -109,7 +230,9 @@ def risky_essence_inputs():
     )
 
 
-# --- IDL Fixtures ---
+# ---------------------------------------------------------------------------
+# IDL fixtures
+# ---------------------------------------------------------------------------
 
 
 @pytest.fixture
@@ -173,7 +296,9 @@ def unsafe_idl():
     }
 
 
-# --- Token Info Fixtures ---
+# ---------------------------------------------------------------------------
+# Token info fixtures
+# ---------------------------------------------------------------------------
 
 
 @pytest.fixture

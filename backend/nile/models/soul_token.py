@@ -3,8 +3,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Integer, Numeric, String
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy import JSON, DateTime, ForeignKey, Integer, Numeric, String, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from nile.models.base import Base, TimestampMixin, UUIDMixin
@@ -14,13 +13,11 @@ class SoulToken(UUIDMixin, TimestampMixin, Base):
     __tablename__ = "soul_tokens"
 
     person_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("persons.id"), unique=True, index=True
+        Uuid, ForeignKey("persons.id"), unique=True, index=True
     )
 
     # On-chain addresses (Solana base58, max 44 chars)
-    token_address: Mapped[str | None] = mapped_column(
-        String(48), unique=True, index=True
-    )
+    token_address: Mapped[str | None] = mapped_column(String(48), unique=True, index=True)
     curve_address: Mapped[str | None] = mapped_column(String(48))
     pool_address: Mapped[str | None] = mapped_column(String(48))
 
@@ -57,7 +54,7 @@ class SoulToken(UUIDMixin, TimestampMixin, Base):
     creator_address: Mapped[str | None] = mapped_column(String(48))
     creator_royalty_bps: Mapped[int] = mapped_column(Integer, default=50)  # 0.5%
 
-    metadata_: Mapped[dict] = mapped_column("metadata", JSONB, default=dict)
+    metadata_: Mapped[dict] = mapped_column("metadata", JSON, default=dict)
 
     # Relationships
     person: Mapped["Person"] = relationship(  # noqa: F821

@@ -2,8 +2,7 @@
 
 import uuid
 
-from sqlalchemy import ForeignKey, Integer, Numeric, String, Text
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy import JSON, ForeignKey, Integer, Numeric, String, Text, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from nile.models.base import Base, TimestampMixin, UUIDMixin
@@ -12,24 +11,18 @@ from nile.models.base import Base, TimestampMixin, UUIDMixin
 class OracleEvent(UUIDMixin, TimestampMixin, Base):
     __tablename__ = "oracle_events"
 
-    person_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("persons.id"), index=True
-    )
+    person_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("persons.id"), index=True)
 
     # Event details
     event_type: Mapped[str] = mapped_column(
         String(64), nullable=False, index=True
     )  # social_viral, news_positive, sports_win, injury, scandal, etc.
-    source: Mapped[str] = mapped_column(
-        String(64), nullable=False
-    )  # twitter, espn, reuters, etc.
+    source: Mapped[str] = mapped_column(String(64), nullable=False)  # twitter, espn, reuters, etc.
     headline: Mapped[str] = mapped_column(Text, nullable=False)
 
     # Impact assessment
     impact_score: Mapped[int] = mapped_column(Integer, default=0)  # -100 to +100
-    confidence: Mapped[float] = mapped_column(
-        Numeric(5, 4), default=0
-    )  # 0.0 to 1.0
+    confidence: Mapped[float] = mapped_column(Numeric(5, 4), default=0)  # 0.0 to 1.0
 
     # Consensus tracking
     status: Mapped[str] = mapped_column(
@@ -44,9 +37,9 @@ class OracleEvent(UUIDMixin, TimestampMixin, Base):
     tx_sig: Mapped[str | None] = mapped_column(String(96))
 
     # Raw data and agent voting record
-    raw_data: Mapped[dict] = mapped_column(JSONB, default=dict)
+    raw_data: Mapped[dict] = mapped_column(JSON, default=dict)
     agent_votes: Mapped[dict] = mapped_column(
-        JSONB, default=dict
+        JSON, default=dict
     )  # {agent_id: {vote: "confirm"|"reject", impact: int}}
 
     # Relationships

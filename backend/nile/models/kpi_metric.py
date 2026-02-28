@@ -3,8 +3,7 @@
 import uuid
 from datetime import UTC, datetime
 
-from sqlalchemy import BigInteger, DateTime, ForeignKey, Numeric, String, func
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy import JSON, BigInteger, DateTime, ForeignKey, Numeric, String, Uuid, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from nile.models.base import Base
@@ -22,9 +21,7 @@ class KPIMetric(Base):
     value: Mapped[float] = mapped_column(Numeric(12, 4), nullable=False)
 
     # Optional dimensional breakdowns
-    contract_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("contracts.id")
-    )
+    contract_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, ForeignKey("contracts.id"))
     category: Mapped[str | None] = mapped_column(String(64))
     agent: Mapped[str | None] = mapped_column(String(32))
 
@@ -34,4 +31,4 @@ class KPIMetric(Base):
         server_default=func.now(),
         index=True,
     )
-    metadata_: Mapped[dict] = mapped_column("metadata", JSONB, default=dict)
+    metadata_: Mapped[dict] = mapped_column("metadata", JSON, default=dict)

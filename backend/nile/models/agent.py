@@ -1,8 +1,6 @@
 """Agent model — registered AI agents in the NILE ecosystem."""
 
-
-from sqlalchemy import Boolean, DateTime, Numeric, String, Text
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import JSON, Boolean, DateTime, Numeric, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from nile.models.base import Base, TimestampMixin, UUIDMixin
@@ -19,8 +17,8 @@ class Agent(UUIDMixin, TimestampMixin, Base):
     owner_id: Mapped[str] = mapped_column(String(128), nullable=False, index=True)
 
     # Capabilities: ["detect", "patch", "exploit"]
-    capabilities: Mapped[list] = mapped_column(JSONB, default=list)
-    config_schema: Mapped[dict] = mapped_column(JSONB, default=dict)
+    capabilities: Mapped[list] = mapped_column(JSON, default=list)
+    config_schema: Mapped[dict] = mapped_column(JSON, default=dict)
 
     # Status
     status: Mapped[str] = mapped_column(String(16), default="pending_review", index=True)

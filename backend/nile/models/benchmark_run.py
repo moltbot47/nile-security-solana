@@ -2,8 +2,7 @@
 
 from datetime import UTC, datetime
 
-from sqlalchemy import DateTime, Numeric, String, func
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import JSON, DateTime, Numeric, String, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from nile.models.base import Base, UUIDMixin
@@ -22,7 +21,7 @@ class BenchmarkRun(UUIDMixin, Base):
     score_pct: Mapped[float] = mapped_column(Numeric(5, 2), default=0)
 
     # Per-audit breakdown
-    audit_results: Mapped[list] = mapped_column(JSONB, default=list)
+    audit_results: Mapped[list] = mapped_column(JSON, default=list)
 
     # Baseline comparison
     baseline_agent: Mapped[str | None] = mapped_column(String(32))
@@ -35,4 +34,4 @@ class BenchmarkRun(UUIDMixin, Base):
         server_default=func.now(),
     )
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    metadata_: Mapped[dict] = mapped_column("metadata", JSONB, default=dict)
+    metadata_: Mapped[dict] = mapped_column("metadata", JSON, default=dict)
