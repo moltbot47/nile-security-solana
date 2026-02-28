@@ -13,23 +13,39 @@ class RateLimiter:
         self.max_requests = max_requests
         self.window_seconds = window_seconds
         self._requests: dict[str, list[float]] = defaultdict(list)
+        self._last_cleanup: float = 0.0
 
     def _client_key(self, request: Request) -> str:
-        forwarded = request.headers.get("x-forwarded-for")
-        if forwarded:
-            return forwarded.split(",")[0].strip()
+        """Use the real client IP only — never trust X-Forwarded-For."""
         return request.client.host if request.client else "unknown"
+
+    def _cleanup_stale(self, now: float) -> None:
+        """Remove entries for IPs that have no recent requests."""
+        # Run cleanup at most once per window
+        if now - self._last_cleanup < self.window_seconds:
+            return
+        self._last_cleanup = now
+        cutoff = now - self.window_seconds
+        stale_keys = [
+            k
+            for k, timestamps in self._requests.items()
+            if not timestamps or timestamps[-1] <= cutoff
+        ]
+        for k in stale_keys:
+            del self._requests[k]
 
     def check(self, request: Request) -> None:
         """Raise 429 if rate limit exceeded."""
         key = self._client_key(request)
         now = time.monotonic()
+
+        # Periodically clean up stale entries to prevent memory leak
+        self._cleanup_stale(now)
+
         cutoff = now - self.window_seconds
 
-        # Prune expired entries
-        self._requests[key] = [
-            t for t in self._requests[key] if t > cutoff
-        ]
+        # Prune expired entries for this key
+        self._requests[key] = [t for t in self._requests[key] if t > cutoff]
 
         if len(self._requests[key]) >= self.max_requests:
             raise HTTPException(

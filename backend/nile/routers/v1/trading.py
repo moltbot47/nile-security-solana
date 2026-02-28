@@ -7,6 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from nile.core.auth import Agent, get_current_agent
 from nile.core.database import get_db
 from nile.core.rate_limit import quote_limiter, trading_limiter
 from nile.models.portfolio import Portfolio
@@ -78,6 +79,7 @@ async def get_quote(
 async def execute_buy(
     request: Request,
     req: TradeRequest,
+    agent: Agent = Depends(get_current_agent),
     db: AsyncSession = Depends(get_db),
 ) -> TradeResponse:
     """Execute a buy trade (off-chain record, on-chain tx async)."""
@@ -90,9 +92,7 @@ async def execute_buy(
 
     # Circuit breaker check
     if is_circuit_breaker_active(str(token.id)):
-        raise HTTPException(
-            423, "Trading paused — circuit breaker active for this token"
-        )
+        raise HTTPException(423, "Trading paused — circuit breaker active for this token")
 
     amount = float(req.amount)
     price = float(token.current_price_usd or 0)
@@ -137,6 +137,7 @@ async def execute_buy(
 async def execute_sell(
     request: Request,
     req: TradeRequest,
+    agent: Agent = Depends(get_current_agent),
     db: AsyncSession = Depends(get_db),
 ) -> TradeResponse:
     """Execute a sell trade (off-chain record, on-chain tx async)."""
@@ -149,9 +150,7 @@ async def execute_sell(
 
     # Circuit breaker check
     if is_circuit_breaker_active(str(token.id)):
-        raise HTTPException(
-            423, "Trading paused — circuit breaker active for this token"
-        )
+        raise HTTPException(423, "Trading paused — circuit breaker active for this token")
 
     amount = float(req.amount)
     price = float(token.current_price_usd or 0)

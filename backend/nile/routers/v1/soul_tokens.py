@@ -101,9 +101,7 @@ async def graduating_soon(
         select(SoulToken)
         .options(selectinload(SoulToken.person))
         .where(SoulToken.phase == "bonding")
-        .order_by(
-            (SoulToken.reserve_balance_sol / SoulToken.graduation_threshold_sol).desc()
-        )
+        .order_by((SoulToken.reserve_balance_sol / SoulToken.graduation_threshold_sol).desc())
         .limit(limit)
     )
     result = await db.execute(query)
@@ -134,9 +132,7 @@ async def get_soul_token(
 ) -> SoulTokenResponse:
     """Get soul token details with market data."""
     query = (
-        select(SoulToken)
-        .where(SoulToken.id == token_id)
-        .options(selectinload(SoulToken.person))
+        select(SoulToken).where(SoulToken.id == token_id).options(selectinload(SoulToken.person))
     )
     result = await db.execute(query)
     token = result.scalar_one_or_none()
@@ -191,6 +187,12 @@ async def list_trades(
     return [TradeResponse.model_validate(t) for t in result.scalars().all()]
 
 
+@router.get("/risk/circuit-breakers")
+async def active_circuit_breakers() -> dict:
+    """Get all currently active circuit breakers."""
+    return {"active_breakers": get_active_breakers()}
+
+
 @router.get("/{token_id}/risk")
 async def token_risk(
     token_id: uuid.UUID,
@@ -198,12 +200,6 @@ async def token_risk(
 ) -> dict:
     """Get risk summary for a soul token including circuit breaker status."""
     return await get_token_risk_summary(db, str(token_id))
-
-
-@router.get("/risk/circuit-breakers")
-async def active_circuit_breakers() -> dict:
-    """Get all currently active circuit breakers."""
-    return {"active_breakers": get_active_breakers()}
 
 
 @router.get("/{token_id}/candles", response_model=list[PriceCandleResponse])

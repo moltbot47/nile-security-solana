@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from nile.core.auth import Agent, get_current_agent
 from nile.core.database import get_db
 from nile.models.oracle_event import OracleEvent
 from nile.schemas.person import OracleEventResponse
@@ -33,6 +34,7 @@ class OracleVoteRequest(BaseModel):
 @router.post("/reports", response_model=OracleEventResponse, status_code=201)
 async def submit_report(
     req: OracleReportRequest,
+    agent: Agent = Depends(get_current_agent),
     db: AsyncSession = Depends(get_db),
 ) -> OracleEventResponse:
     """Submit a new oracle report about a person."""
