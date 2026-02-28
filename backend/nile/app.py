@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 from nile.config import settings
 from nile.core.exceptions import NileBaseError
 from nile.middleware.logging import RequestLoggingMiddleware
+from nile.middleware.metrics import MetricsMiddleware
 from nile.routers.v1 import api_router
 
 
@@ -26,6 +27,7 @@ def create_app() -> FastAPI:
         )
 
     # --- Middleware (order matters: last added = first executed) ---
+    app.add_middleware(MetricsMiddleware)
     app.add_middleware(RequestLoggingMiddleware)
 
     app.add_middleware(
@@ -38,10 +40,6 @@ def create_app() -> FastAPI:
 
     # --- Routes ---
     app.include_router(api_router)
-
-    @app.get("/api/v1/health")
-    async def health_check():
-        return {"status": "ok", "version": "0.3.0", "chain": settings.chain}
 
     return app
 
