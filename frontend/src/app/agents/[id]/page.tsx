@@ -8,33 +8,6 @@ import { api } from "@/lib/api";
 import type { Agent, AgentContribution } from "@/lib/types";
 import { scoreToGrade, gradeColor } from "@/lib/utils";
 
-const DEMO_AGENT: Agent = {
-  id: "demo",
-  name: "AuditAI",
-  description: "Multi-capability AI agent for smart contract security analysis",
-  version: "1.2.0",
-  owner_id: "moltbot47",
-  capabilities: ["detect", "patch"],
-  status: "active",
-  nile_score_total: 80,
-  nile_score_name: 85,
-  nile_score_image: 75,
-  nile_score_likeness: 82,
-  nile_score_essence: 78,
-  total_points: 550,
-  total_contributions: 15,
-  is_online: true,
-  created_at: "2026-02-18T00:00:00Z",
-};
-
-const DEMO_CONTRIBUTIONS: AgentContribution[] = [
-  { id: "1", contribution_type: "detection", severity_found: "critical", verified: true, points_awarded: 100, summary: "Reentrancy vulnerability in withdraw()", created_at: "2026-02-19T02:00:00Z" },
-  { id: "2", contribution_type: "detection", severity_found: "high", verified: true, points_awarded: 50, summary: "Unchecked return value in transfer()", created_at: "2026-02-19T01:30:00Z" },
-  { id: "3", contribution_type: "patch", severity_found: null, verified: false, points_awarded: 75, summary: "Applied nonReentrant modifier to withdraw()", created_at: "2026-02-19T01:00:00Z" },
-  { id: "4", contribution_type: "detection", severity_found: "medium", verified: true, points_awarded: 25, summary: "Integer overflow in staking reward calculation", created_at: "2026-02-18T23:00:00Z" },
-  { id: "5", contribution_type: "verification", severity_found: null, verified: true, points_awarded: 15, summary: "Cross-verified flash loan vulnerability finding", created_at: "2026-02-18T22:00:00Z" },
-];
-
 const SEVERITY_COLORS: Record<string, string> = {
   critical: "bg-red-500/20 text-red-400 border-red-500/30",
   high: "bg-orange-500/20 text-orange-400 border-orange-500/30",
@@ -52,15 +25,50 @@ const TYPE_COLORS: Record<string, string> = {
 export default function AgentDetailPage() {
   const params = useParams();
   const agentId = params.id as string;
-  const [agent, setAgent] = useState<Agent>(DEMO_AGENT);
-  const [contributions, setContributions] = useState<AgentContribution[]>(DEMO_CONTRIBUTIONS);
+  const [agent, setAgent] = useState<Agent | null>(null);
+  const [contributions, setContributions] = useState<AgentContribution[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (agentId && !agentId.startsWith("demo")) {
-      api.agents.get(agentId).then(setAgent).catch(() => {});
-      api.agents.contributions(agentId).then(setContributions).catch(() => {});
-    }
+    setLoading(true);
+    setError(null);
+    api.agents
+      .get(agentId)
+      .then((a) => {
+        setAgent(a);
+        api.agents.contributions(agentId).then(setContributions).catch(() => {});
+      })
+      .catch(() => setError("Failed to load agent details"))
+      .finally(() => setLoading(false));
   }, [agentId]);
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="h-24 bg-gray-800 rounded-xl animate-pulse" />
+        <div className="grid grid-cols-5 gap-4">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="h-32 bg-gray-800 rounded-xl animate-pulse" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !agent) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 gap-3">
+        <p className="text-gray-500">{error || "Agent not found"}</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-4 py-2 rounded-lg border border-gray-700 text-gray-400 hover:text-white hover:border-gray-500 text-sm transition-colors"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">

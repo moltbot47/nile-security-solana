@@ -26,6 +26,7 @@ export default function PortfolioPage() {
   const [holdings, setHoldings] = useState<PortfolioItem[]>([]);
   const [trades, setTrades] = useState<Trade[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [solPrice, setSolPrice] = useState(SOL_PRICE_FALLBACK);
 
   // Fetch live SOL price
@@ -49,6 +50,7 @@ export default function PortfolioPage() {
 
   const loadPortfolio = async (address: string) => {
     setLoading(true);
+    setError(null);
     try {
       const [h, t] = await Promise.all([
         api.trading.portfolio(address),
@@ -58,6 +60,7 @@ export default function PortfolioPage() {
       setTrades(t);
       setConnected(true);
     } catch {
+      setError("Failed to load portfolio. Please check the wallet address.");
       setHoldings([]);
       setTrades([]);
     } finally {
@@ -105,6 +108,12 @@ export default function PortfolioPage() {
           </button>
         </div>
       </div>
+
+      {error && (
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-red-400 text-sm">
+          {error}
+        </div>
+      )}
 
       {connected && (
         <>

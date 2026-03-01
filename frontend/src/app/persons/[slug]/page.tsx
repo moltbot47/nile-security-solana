@@ -32,28 +32,6 @@ function impactLabel(score: number): string {
   return "neutral";
 }
 
-const DEMO_PERSON: Person = {
-  id: "1",
-  display_name: "LeBron James",
-  slug: "lebron-james",
-  bio: "4x NBA Champion, 4x NBA MVP, all-time leading scorer. Cultural icon and business mogul.",
-  avatar_url: null,
-  banner_url: null,
-  verification_level: "premium",
-  category: "athlete",
-  tags: ["basketball", "nba", "entrepreneur"],
-  social_links: { twitter: "@KingJames", instagram: "@kingjames" },
-  nile_name_score: 95,
-  nile_image_score: 88,
-  nile_likeness_score: 82,
-  nile_essence_score: 90,
-  nile_total_score: 92,
-  created_at: new Date().toISOString(),
-  token_symbol: "BRON",
-  token_price_usd: 14.50,
-  token_market_cap_usd: 2_500_000,
-};
-
 export default function PersonDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
@@ -62,9 +40,11 @@ export default function PersonDetailPage() {
   const [valuations, setValuations] = useState<ValuationSnapshot[]>([]);
   const [events, setEvents] = useState<OracleEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setLoading(true);
+    setError(null);
     // The API uses UUID — try slug lookup via list endpoint first
     api.persons
       .list({ search: slug, limit: 1 })
@@ -80,11 +60,11 @@ export default function PersonDetailPage() {
           api.persons.valuationHistory(p.id).then(setValuations).catch(() => {});
           api.persons.oracleEvents(p.id).then(setEvents).catch(() => {});
         } else {
-          setPerson(DEMO_PERSON);
+          setPerson(null);
         }
       })
       .catch(() => {
-        setPerson(DEMO_PERSON);
+        setError("Failed to load person details");
       })
       .finally(() => setLoading(false));
   }, [slug]);
@@ -97,10 +77,16 @@ export default function PersonDetailPage() {
     );
   }
 
-  if (!person) {
+  if (error || !person) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500">Person not found</div>
+      <div className="flex flex-col items-center justify-center h-64 gap-3">
+        <p className="text-gray-500">{error || "Person not found"}</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-4 py-2 rounded-lg border border-gray-700 text-gray-400 hover:text-white hover:border-gray-500 text-sm transition-colors"
+        >
+          Retry
+        </button>
       </div>
     );
   }
