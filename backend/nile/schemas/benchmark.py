@@ -3,7 +3,7 @@
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class BenchmarkCreate(BaseModel):
@@ -27,7 +27,7 @@ class BenchmarkResponse(BaseModel):
     status: str
     started_at: datetime
     finished_at: datetime | None
-    metadata: dict
+    metadata: dict = Field(validation_alias="metadata_")
 
     model_config = {"from_attributes": True}
 
