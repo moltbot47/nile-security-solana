@@ -39,3 +39,16 @@ class TestEventHistory:
         assert resp.status_code == 200
         data = resp.json()
         assert all(e["event_type"] == "scan.completed" for e in data)
+
+
+@pytest.mark.asyncio
+class TestEventStream:
+    async def test_sse_stream_route_registered(self, client):
+        """SSE endpoint route exists (stream tested via unit test in test_event_stream.py)."""
+        # The SSE endpoint is a long-lived streaming connection that blocks
+        # until events arrive. Full integration requires Redis pubsub mock.
+        # Route existence is validated here; stream logic in test_event_stream.py.
+        from nile.app import app
+
+        routes = [r.path for r in app.routes if hasattr(r, "path")]
+        assert "/api/v1/events/stream" in routes
