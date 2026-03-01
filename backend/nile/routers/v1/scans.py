@@ -74,6 +74,7 @@ async def list_scans(
     status: str | None = None,
     db: AsyncSession = Depends(get_db),
 ):
+    """List scan jobs, optionally filtered by status."""
     query = select(ScanJob).order_by(ScanJob.created_at.desc())
     if status:
         query = query.where(ScanJob.status == status)
@@ -87,6 +88,7 @@ async def create_scan(
     agent: Agent = Depends(get_current_agent),
     db: AsyncSession = Depends(get_db),
 ):
+    """Create a new scan job for a contract."""
     scan = ScanJob(
         contract_id=data.contract_id,
         mode=data.mode,
@@ -102,6 +104,7 @@ async def create_scan(
 
 @router.get("/{scan_id}", response_model=ScanResponse)
 async def get_scan(scan_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+    """Get a scan job by ID."""
     result = await db.execute(select(ScanJob).where(ScanJob.id == scan_id))
     scan = result.scalar_one_or_none()
     if not scan:

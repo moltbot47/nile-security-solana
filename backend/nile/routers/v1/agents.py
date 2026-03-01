@@ -196,6 +196,7 @@ async def leaderboard(
     limit: int = Query(25, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
 ):
+    """Agent leaderboard ranked by total points."""
     query = (
         select(Agent)
         .where(Agent.status == "active")
@@ -224,6 +225,7 @@ async def leaderboard(
 
 @router.get("/{agent_id}", response_model=AgentResponse)
 async def get_agent(agent_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+    """Get agent details by ID."""
     result = await db.execute(select(Agent).where(Agent.id == agent_id))
     agent = result.scalar_one_or_none()
     if not agent:
@@ -256,6 +258,7 @@ async def update_agent(
     current_agent: Agent = Depends(get_current_agent),
     db: AsyncSession = Depends(get_db),
 ):
+    """Update agent profile (own agent only)."""
     if str(current_agent.id) != str(agent_id):
         raise HTTPException(status_code=403, detail="Can only update your own agent")
 
@@ -301,6 +304,7 @@ async def agent_contributions(
     limit: int = Query(50, ge=1, le=500),
     db: AsyncSession = Depends(get_db),
 ):
+    """Get contribution history for an agent."""
     result = await db.execute(
         select(AgentContribution)
         .where(AgentContribution.agent_id == agent_id)

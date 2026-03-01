@@ -35,6 +35,23 @@ class ContractWithScore(ContractResponse):
     latest_nile_score: "NileScoreResponse | None" = None
 
 
+class VulnerabilityResponse(BaseModel):
+    id: uuid.UUID
+    contract_id: uuid.UUID
+    scan_job_id: uuid.UUID | None = None
+    title: str
+    severity: str
+    category: str
+    description: str | None = None
+    impact: str | None = None
+    remediation: str | None = None
+    confidence: float | None = None
+    status: str
+    detected_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
 class NileScoreResponse(BaseModel):
     id: uuid.UUID
     contract_id: uuid.UUID

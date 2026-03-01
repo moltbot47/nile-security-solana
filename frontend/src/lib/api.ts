@@ -4,6 +4,7 @@ import type {
   AssetHealthItem,
   AttackerKPIs,
   BenchmarkBaseline,
+  BenchmarkRun,
   CategoryCount,
   Contract,
   DefenderKPIs,
@@ -56,7 +57,7 @@ export const api = {
     assetHealth: () => fetchJSON<{ items: AssetHealthItem[] }>("/kpis/asset-health"),
   },
   benchmarks: {
-    list: () => fetchJSON<unknown[]>("/benchmarks"),
+    list: () => fetchJSON<BenchmarkRun[]>("/benchmarks"),
     baselines: () => fetchJSON<BenchmarkBaseline[]>("/benchmarks/baselines"),
   },
   agents: {

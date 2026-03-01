@@ -52,6 +52,19 @@ export interface AssetHealthItem {
   last_scan: string | null;
 }
 
+export interface BenchmarkRun {
+  id: string;
+  split: string;
+  mode: string;
+  agent: string;
+  total_score: number;
+  max_score: number;
+  score_pct: number;
+  status: string;
+  started_at: string;
+  finished_at: string | null;
+}
+
 export interface BenchmarkBaseline {
   agent: string;
   mode: string;

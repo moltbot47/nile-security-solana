@@ -32,6 +32,7 @@ async def list_benchmarks(
     limit: int = Query(50, ge=1, le=200),
     db: AsyncSession = Depends(get_db),
 ):
+    """List benchmark runs with pagination."""
     result = await db.execute(
         select(BenchmarkRun).order_by(BenchmarkRun.started_at.desc()).offset(skip).limit(limit)
     )
@@ -44,6 +45,7 @@ async def create_benchmark(
     agent: Agent = Depends(get_current_agent),
     db: AsyncSession = Depends(get_db),
 ):
+    """Enqueue a new benchmark run."""
     run = BenchmarkRun(
         split=data.split,
         mode=data.mode,
@@ -59,11 +61,13 @@ async def create_benchmark(
 
 @router.get("/baselines", response_model=list[BenchmarkBaseline])
 async def get_baselines():
+    """Get published benchmark baselines for comparison."""
     return PUBLISHED_BASELINES
 
 
 @router.get("/{run_id}", response_model=BenchmarkResponse)
 async def get_benchmark(run_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+    """Get a benchmark run by ID."""
     result = await db.execute(select(BenchmarkRun).where(BenchmarkRun.id == run_id))
     run = result.scalar_one_or_none()
     if not run:

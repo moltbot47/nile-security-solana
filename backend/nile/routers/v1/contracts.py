@@ -13,7 +13,12 @@ from nile.models.agent import Agent
 from nile.models.contract import Contract
 from nile.models.nile_score import NileScore
 from nile.models.vulnerability import Vulnerability
-from nile.schemas.contract import ContractCreate, ContractResponse, NileScoreResponse
+from nile.schemas.contract import (
+    ContractCreate,
+    ContractResponse,
+    NileScoreResponse,
+    VulnerabilityResponse,
+)
 
 router = APIRouter()
 
@@ -82,7 +87,7 @@ async def get_nile_history(
     return result.scalars().all()
 
 
-@router.get("/{contract_id}/vulnerabilities")
+@router.get("/{contract_id}/vulnerabilities", response_model=list[VulnerabilityResponse])
 async def get_contract_vulnerabilities(
     contract_id: uuid.UUID,
     limit: int = Query(50, ge=1, le=500),

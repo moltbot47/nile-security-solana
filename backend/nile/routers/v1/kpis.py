@@ -24,6 +24,7 @@ router = APIRouter()
 
 @router.get("/attacker", response_model=AttackerKPIs)
 async def attacker_kpis(time_range: str = "30d", db: AsyncSession = Depends(get_db)):
+    """Attacker-perspective KPIs: exploit success rate and attack vectors."""
     # Exploit success rate from scan jobs in exploit mode
     total_exploits = await db.execute(
         select(func.count()).select_from(ScanJob).where(ScanJob.mode == "exploit")
@@ -55,6 +56,7 @@ async def attacker_kpis(time_range: str = "30d", db: AsyncSession = Depends(get_
 
 @router.get("/defender", response_model=DefenderKPIs)
 async def defender_kpis(time_range: str = "30d", db: AsyncSession = Depends(get_db)):
+    """Defender-perspective KPIs: detection recall and patch success rate."""
     # Detection recall from detect-mode scans
     total_detects = await db.execute(
         select(func.count()).select_from(ScanJob).where(ScanJob.mode == "detect")
@@ -154,6 +156,7 @@ async def kpi_trends(
     limit: int = Query(100, ge=1, le=1000),
     db: AsyncSession = Depends(get_db),
 ):
+    """Get KPI metric trends over time."""
     result = await db.execute(
         select(KPIMetric)
         .where(KPIMetric.metric_name == metric_name, KPIMetric.dimension == dimension)
