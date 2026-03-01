@@ -1,6 +1,6 @@
 """Events API — SSE stream and event history."""
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy import select
@@ -39,7 +39,7 @@ async def sse_stream():
 @router.get("/history", response_model=list[EventResponse])
 async def event_history(
     event_type: str | None = None,
-    limit: int = 50,
+    limit: int = Query(50, ge=1, le=200),
     db: AsyncSession = Depends(get_db),
 ):
     """Get recent ecosystem events."""

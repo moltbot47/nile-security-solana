@@ -2,7 +2,7 @@
 
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -27,8 +27,8 @@ router = APIRouter()
 async def list_soul_tokens(
     sort: str = "market_cap",
     phase: str | None = None,
-    limit: int = 50,
-    offset: int = 0,
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
     db: AsyncSession = Depends(get_db),
 ) -> list[SoulTokenListItem]:
     """List soul tokens with market data."""
@@ -93,7 +93,7 @@ async def market_overview(
 
 @router.get("/graduating-soon", response_model=list[SoulTokenListItem])
 async def graduating_soon(
-    limit: int = 10,
+    limit: int = Query(10, ge=1, le=50),
     db: AsyncSession = Depends(get_db),
 ) -> list[SoulTokenListItem]:
     """Tokens approaching graduation threshold."""
@@ -172,8 +172,8 @@ async def get_soul_token(
 @router.get("/{token_id}/trades", response_model=list[TradeResponse])
 async def list_trades(
     token_id: uuid.UUID,
-    limit: int = 50,
-    offset: int = 0,
+    limit: int = Query(50, ge=1, le=500),
+    offset: int = Query(0, ge=0),
     db: AsyncSession = Depends(get_db),
 ) -> list[TradeResponse]:
     """Get trade history for a soul token."""
@@ -207,7 +207,7 @@ async def token_risk(
 async def get_candles(
     token_id: uuid.UUID,
     interval: str = "1h",
-    limit: int = 100,
+    limit: int = Query(100, ge=1, le=1000),
     db: AsyncSession = Depends(get_db),
 ) -> list[PriceCandleResponse]:
     """Get OHLCV candles for a soul token."""

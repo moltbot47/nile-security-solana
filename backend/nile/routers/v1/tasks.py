@@ -3,7 +3,7 @@
 import uuid
 from datetime import UTC, datetime
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -43,7 +43,7 @@ class TaskSubmitResponse(BaseModel):
 @router.get("/available", response_model=list[TaskResponse])
 async def list_available_tasks(
     mode: str | None = None,
-    limit: int = 20,
+    limit: int = Query(20, ge=1, le=100),
     current_agent: Agent = Depends(get_current_agent),
     db: AsyncSession = Depends(get_db),
 ):

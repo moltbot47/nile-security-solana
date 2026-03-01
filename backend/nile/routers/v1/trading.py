@@ -2,7 +2,7 @@
 
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -196,7 +196,7 @@ async def execute_sell(
 @router.get("/history", response_model=list[TradeResponse])
 async def trade_history(
     trader_address: str | None = None,
-    limit: int = 50,
+    limit: int = Query(50, ge=1, le=500),
     db: AsyncSession = Depends(get_db),
 ) -> list[TradeResponse]:
     """Get trade history, optionally filtered by trader."""

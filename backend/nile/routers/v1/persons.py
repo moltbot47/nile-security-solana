@@ -2,7 +2,7 @@
 
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -71,8 +71,8 @@ async def list_persons(
     verification: str | None = None,
     search: str | None = None,
     sort: str = "score",
-    limit: int = 50,
-    offset: int = 0,
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
     db: AsyncSession = Depends(get_db),
 ) -> list[PersonListItem]:
     """List and search persons."""
@@ -101,7 +101,7 @@ async def list_persons(
 
 @router.get("/trending", response_model=list[PersonListItem])
 async def trending_persons(
-    limit: int = 20,
+    limit: int = Query(20, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
 ) -> list[PersonListItem]:
     """List persons with highest trading volume."""
@@ -177,7 +177,7 @@ async def update_person(
 @router.get("/{person_id}/valuation-history", response_model=list[ValuationSnapshotResponse])
 async def valuation_history(
     person_id: uuid.UUID,
-    limit: int = 50,
+    limit: int = Query(50, ge=1, le=500),
     db: AsyncSession = Depends(get_db),
 ) -> list[ValuationSnapshotResponse]:
     """Get valuation snapshots over time."""
@@ -195,7 +195,7 @@ async def valuation_history(
 async def oracle_events(
     person_id: uuid.UUID,
     status: str | None = None,
-    limit: int = 50,
+    limit: int = Query(50, ge=1, le=200),
     db: AsyncSession = Depends(get_db),
 ) -> list[OracleEventResponse]:
     """Get oracle events for a person."""

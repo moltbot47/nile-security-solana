@@ -3,7 +3,7 @@
 import uuid
 
 import structlog
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -27,7 +27,11 @@ PUBLISHED_BASELINES = [
 
 
 @router.get("", response_model=list[BenchmarkResponse])
-async def list_benchmarks(skip: int = 0, limit: int = 50, db: AsyncSession = Depends(get_db)):
+async def list_benchmarks(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=200),
+    db: AsyncSession = Depends(get_db),
+):
     result = await db.execute(
         select(BenchmarkRun).order_by(BenchmarkRun.started_at.desc()).offset(skip).limit(limit)
     )

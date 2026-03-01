@@ -87,7 +87,7 @@ class TradeResponse(BaseModel):
 class QuoteRequest(BaseModel):
     person_id: uuid.UUID
     side: str = Field(..., pattern=r"^(buy|sell)$")
-    amount: Decimal = Field(..., gt=0)
+    amount: Decimal = Field(..., gt=0, le=1_000_000)
 
 
 class QuoteResponse(BaseModel):
@@ -103,7 +103,7 @@ class QuoteResponse(BaseModel):
 class TradeRequest(BaseModel):
     person_id: uuid.UUID
     side: str = Field(..., pattern=r"^(buy|sell)$")
-    amount: Decimal = Field(..., gt=0)
+    amount: Decimal = Field(..., gt=0, le=1_000_000)
     max_slippage_pct: float = Field(default=1.0, ge=0, le=50)
     trader_address: str = Field(..., min_length=32, max_length=48)
 

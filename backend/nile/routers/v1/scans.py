@@ -2,7 +2,7 @@
 
 import uuid
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -69,8 +69,8 @@ async def scan_solana_program(req: SolanaScanRequest, request: Request):
 
 @router.get("", response_model=list[ScanResponse])
 async def list_scans(
-    skip: int = 0,
-    limit: int = 50,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=200),
     status: str | None = None,
     db: AsyncSession = Depends(get_db),
 ):

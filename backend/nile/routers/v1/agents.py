@@ -3,7 +3,7 @@
 import uuid
 from datetime import UTC, datetime
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -151,13 +151,14 @@ async def register_agent(
 async def list_agents(
     status: str | None = None,
     capability: str | None = None,
+    limit: int = Query(50, ge=1, le=200),
     db: AsyncSession = Depends(get_db),
 ):
     """List agents, optionally filtered by status or capability."""
     query = select(Agent)
     if status:
         query = query.where(Agent.status == status)
-    query = query.order_by(Agent.total_points.desc())
+    query = query.order_by(Agent.total_points.desc()).limit(limit)
 
     result = await db.execute(query)
     agents = result.scalars().all()
@@ -192,7 +193,7 @@ async def list_agents(
 @router.get("/leaderboard", response_model=list[LeaderboardEntry])
 async def leaderboard(
     capability: str | None = None,
-    limit: int = 25,
+    limit: int = Query(25, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
 ):
     query = (
@@ -297,7 +298,7 @@ async def heartbeat(
 @router.get("/{agent_id}/contributions", response_model=list[ContributionResponse])
 async def agent_contributions(
     agent_id: uuid.UUID,
-    limit: int = 50,
+    limit: int = Query(50, ge=1, le=500),
     db: AsyncSession = Depends(get_db),
 ):
     result = await db.execute(

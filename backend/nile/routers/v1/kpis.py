@@ -1,6 +1,6 @@
 """KPI dashboard endpoints."""
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -87,8 +87,12 @@ async def defender_kpis(time_range: str = "30d", db: AsyncSession = Depends(get_
 
 
 @router.get("/asset-health", response_model=AssetHealthResponse)
-async def asset_health(db: AsyncSession = Depends(get_db)):
-    contracts_result = await db.execute(select(Contract))
+async def asset_health(
+    limit: int = Query(50, ge=1, le=200),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get NILE score health for monitored contracts."""
+    contracts_result = await db.execute(select(Contract).limit(limit))
     contracts = contracts_result.scalars().all()
 
     items = []
@@ -147,7 +151,7 @@ async def asset_health(db: AsyncSession = Depends(get_db)):
 async def kpi_trends(
     metric_name: str = "defender.detection_recall",
     dimension: str = "defender",
-    limit: int = 100,
+    limit: int = Query(100, ge=1, le=1000),
     db: AsyncSession = Depends(get_db),
 ):
     result = await db.execute(

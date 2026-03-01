@@ -2,7 +2,7 @@
 
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -120,7 +120,7 @@ async def vote_on_report(
 @router.get("/reports", response_model=list[OracleEventResponse])
 async def list_reports(
     status: str | None = None,
-    limit: int = 50,
+    limit: int = Query(50, ge=1, le=200),
     db: AsyncSession = Depends(get_db),
 ) -> list[OracleEventResponse]:
     """List oracle reports, optionally filtered by status."""

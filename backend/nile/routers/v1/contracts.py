@@ -2,7 +2,7 @@
 
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -22,7 +22,11 @@ contract_create_limiter = RateLimiter(max_requests=10, window_seconds=60)
 
 
 @router.get("", response_model=list[ContractResponse])
-async def list_contracts(skip: int = 0, limit: int = 50, db: AsyncSession = Depends(get_db)):
+async def list_contracts(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=200),
+    db: AsyncSession = Depends(get_db),
+):
     """List contracts with pagination."""
     result = await db.execute(select(Contract).offset(skip).limit(limit))
     return result.scalars().all()
@@ -64,7 +68,9 @@ async def get_contract(contract_id: uuid.UUID, db: AsyncSession = Depends(get_db
 
 @router.get("/{contract_id}/nile-history", response_model=list[NileScoreResponse])
 async def get_nile_history(
-    contract_id: uuid.UUID, limit: int = 50, db: AsyncSession = Depends(get_db)
+    contract_id: uuid.UUID,
+    limit: int = Query(50, ge=1, le=500),
+    db: AsyncSession = Depends(get_db),
 ):
     """Get NILE score history for a contract."""
     result = await db.execute(
@@ -77,11 +83,16 @@ async def get_nile_history(
 
 
 @router.get("/{contract_id}/vulnerabilities")
-async def get_contract_vulnerabilities(contract_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+async def get_contract_vulnerabilities(
+    contract_id: uuid.UUID,
+    limit: int = Query(50, ge=1, le=500),
+    db: AsyncSession = Depends(get_db),
+):
     """Get detected vulnerabilities for a contract."""
     result = await db.execute(
         select(Vulnerability)
         .where(Vulnerability.contract_id == contract_id)
         .order_by(Vulnerability.detected_at.desc())
+        .limit(limit)
     )
     return result.scalars().all()
