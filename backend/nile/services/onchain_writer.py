@@ -25,7 +25,7 @@ def _load_idl() -> dict | None:
     if not _IDL_PATH.exists():
         logger.warning("NILE program IDL not found at %s", _IDL_PATH)
         return None
-    return json.loads(_IDL_PATH.read_text())
+    return json.loads(_IDL_PATH.read_text())  # type: ignore[no-any-return]
 
 
 async def submit_score_onchain(

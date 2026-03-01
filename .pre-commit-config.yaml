@@ -10,6 +10,13 @@ repos:
 
   - repo: local
     hooks:
+      - id: mypy
+        name: mypy (backend)
+        entry: bash -c 'cd backend && uv run mypy nile/'
+        language: system
+        pass_filenames: false
+        files: ^backend/nile/
+
       - id: pytest-fast
         name: pytest (fast)
         entry: bash -c 'cd backend && uv run pytest -x -q --no-header tests/'

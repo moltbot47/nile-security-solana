@@ -30,9 +30,7 @@ class TestReadiness:
             mock_resp.json.return_value = {"result": "ok"}
             mock_httpx_instance.post = AsyncMock(return_value=mock_resp)
             mock_httpx_ctx = AsyncMock()
-            mock_httpx_ctx.__aenter__ = AsyncMock(
-                return_value=mock_httpx_instance
-            )
+            mock_httpx_ctx.__aenter__ = AsyncMock(return_value=mock_httpx_instance)
             mock_httpx_ctx.__aexit__ = AsyncMock(return_value=False)
             mock_httpx.return_value = mock_httpx_ctx
 
@@ -46,9 +44,7 @@ class TestReadiness:
     async def test_db_down(self, mock_session_factory, mock_get_redis, client):
         # DB fails
         mock_ctx = AsyncMock()
-        mock_ctx.__aenter__ = AsyncMock(
-            side_effect=Exception("DB unreachable")
-        )
+        mock_ctx.__aenter__ = AsyncMock(side_effect=Exception("DB unreachable"))
         mock_ctx.__aexit__ = AsyncMock(return_value=False)
         mock_session_factory.return_value = mock_ctx
 
@@ -57,9 +53,7 @@ class TestReadiness:
 
         with patch("httpx.AsyncClient") as mock_httpx:
             mock_httpx_ctx = AsyncMock()
-            mock_httpx_ctx.__aenter__ = AsyncMock(
-                side_effect=Exception("RPC down")
-            )
+            mock_httpx_ctx.__aenter__ = AsyncMock(side_effect=Exception("RPC down"))
             mock_httpx_ctx.__aexit__ = AsyncMock(return_value=False)
             mock_httpx.return_value = mock_httpx_ctx
 
@@ -69,9 +63,7 @@ class TestReadiness:
 
     @patch("nile.core.event_bus.get_redis")
     @patch("nile.core.database.async_session")
-    async def test_redis_down_partial(
-        self, mock_session_factory, mock_get_redis, client
-    ):
+    async def test_redis_down_partial(self, mock_session_factory, mock_get_redis, client):
         # DB succeeds
         mock_session = AsyncMock()
         mock_session.execute = AsyncMock(return_value=MagicMock())
@@ -85,9 +77,7 @@ class TestReadiness:
 
         with patch("httpx.AsyncClient") as mock_httpx:
             mock_httpx_ctx = AsyncMock()
-            mock_httpx_ctx.__aenter__ = AsyncMock(
-                side_effect=Exception("RPC down")
-            )
+            mock_httpx_ctx.__aenter__ = AsyncMock(side_effect=Exception("RPC down"))
             mock_httpx_ctx.__aexit__ = AsyncMock(return_value=False)
             mock_httpx.return_value = mock_httpx_ctx
 

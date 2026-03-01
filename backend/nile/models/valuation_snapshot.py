@@ -1,12 +1,18 @@
 """ValuationSnapshot model — point-in-time NILE valuation of a person."""
 
+from __future__ import annotations
+
 import uuid
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import JSON, DateTime, ForeignKey, Numeric, String, Uuid, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from nile.models.base import Base, UUIDMixin
+
+if TYPE_CHECKING:
+    from nile.models.person import Person
 
 
 class ValuationSnapshot(UUIDMixin, Base):
@@ -36,6 +42,4 @@ class ValuationSnapshot(UUIDMixin, Base):
     )
 
     # Relationships
-    person: Mapped["Person"] = relationship(  # noqa: F821
-        "Person", back_populates="valuation_snapshots"
-    )
+    person: Mapped[Person] = relationship("Person", back_populates="valuation_snapshots")

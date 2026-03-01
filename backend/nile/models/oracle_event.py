@@ -1,11 +1,17 @@
 """OracleEvent model — real-world events affecting a person's NIL value."""
 
+from __future__ import annotations
+
 import uuid
+from typing import TYPE_CHECKING
 
 from sqlalchemy import JSON, ForeignKey, Integer, Numeric, String, Text, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from nile.models.base import Base, TimestampMixin, UUIDMixin
+
+if TYPE_CHECKING:
+    from nile.models.person import Person
 
 
 class OracleEvent(UUIDMixin, TimestampMixin, Base):
@@ -43,6 +49,4 @@ class OracleEvent(UUIDMixin, TimestampMixin, Base):
     )  # {agent_id: {vote: "confirm"|"reject", impact: int}}
 
     # Relationships
-    person: Mapped["Person"] = relationship(  # noqa: F821
-        "Person", back_populates="oracle_events"
-    )
+    person: Mapped[Person] = relationship("Person", back_populates="oracle_events")

@@ -93,9 +93,7 @@ class TestCircuitBreaker:
 @pytest.mark.asyncio
 class TestRiskCheckExceptions:
     @patch("nile.routers.v1.trading.run_risk_checks", new_callable=AsyncMock)
-    async def test_buy_risk_check_fails_gracefully(
-        self, mock_risk, client, db_session, trade_env
-    ):
+    async def test_buy_risk_check_fails_gracefully(self, mock_risk, client, db_session, trade_env):
         """Risk check exception doesn't prevent trade from completing."""
         mock_risk.side_effect = RuntimeError("Risk engine down")
         person, _, _, jwt = trade_env
@@ -112,9 +110,7 @@ class TestRiskCheckExceptions:
         assert resp.status_code == 201
 
     @patch("nile.routers.v1.trading.run_risk_checks", new_callable=AsyncMock)
-    async def test_sell_risk_check_fails_gracefully(
-        self, mock_risk, client, db_session, trade_env
-    ):
+    async def test_sell_risk_check_fails_gracefully(self, mock_risk, client, db_session, trade_env):
         mock_risk.side_effect = RuntimeError("Risk engine down")
         person, _, _, jwt = trade_env
         resp = await client.post(
@@ -130,9 +126,7 @@ class TestRiskCheckExceptions:
         assert resp.status_code == 201
 
     @patch("nile.routers.v1.trading.run_risk_checks", new_callable=AsyncMock)
-    async def test_buy_with_risk_alerts(
-        self, mock_risk, client, db_session, trade_env
-    ):
+    async def test_buy_with_risk_alerts(self, mock_risk, client, db_session, trade_env):
         """Risk alerts are returned but trade still succeeds."""
         mock_risk.return_value = [{"type": "unusual_volume", "severity": "warning"}]
         person, _, _, jwt = trade_env

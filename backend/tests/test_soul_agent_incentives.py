@@ -77,9 +77,7 @@ class TestAwardSoulPoints:
         db_session.add(agent)
         await db_session.flush()
 
-        points = await award_soul_points(
-            db_session, agent_id=agent.id, action="nonexistent_action"
-        )
+        points = await award_soul_points(db_session, agent_id=agent.id, action="nonexistent_action")
         assert points == 0
 
     async def test_agent_not_found_returns_zero(self, db_session):

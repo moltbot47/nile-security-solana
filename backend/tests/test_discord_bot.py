@@ -11,11 +11,14 @@ import pytest
 @pytest.fixture
 def mock_discord():
     """Set up mock discord module and import the bot."""
-    with patch.dict("sys.modules", {
-        "discord": MagicMock(),
-        "discord.ext": MagicMock(),
-        "discord.ext.commands": MagicMock(),
-    }):
+    with patch.dict(
+        "sys.modules",
+        {
+            "discord": MagicMock(),
+            "discord.ext": MagicMock(),
+            "discord.ext.commands": MagicMock(),
+        },
+    ):
         import importlib
 
         import nile.discord.bot as bot_mod
@@ -105,9 +108,7 @@ class TestEventDescription:
         assert "detect" in desc
 
     def test_scan_completed(self, bot):
-        desc = bot._event_description(
-            "scan.completed", {"nile_score": 85, "grade": "A"}
-        )
+        desc = bot._event_description("scan.completed", {"nile_score": 85, "grade": "A"})
         assert "85" in desc
         assert "A" in desc
 
@@ -119,15 +120,11 @@ class TestEventDescription:
         assert "critical" in desc
 
     def test_contribution_no_severity(self, bot):
-        desc = bot._event_description(
-            "contribution.patch", {"points": 75}
-        )
+        desc = bot._event_description("contribution.patch", {"points": 75})
         assert "75" in desc
 
     def test_unknown_with_metadata(self, bot):
-        desc = bot._event_description(
-            "some.unknown", {"key": "value"}
-        )
+        desc = bot._event_description("some.unknown", {"key": "value"})
         assert "key" in desc
 
     def test_unknown_empty_metadata(self, bot):
@@ -162,47 +159,57 @@ class TestEventColor:
 class TestRouteEvent:
     async def test_soul_event_dispatches(self, bot):
         bot._handle_soul_event = AsyncMock()
-        await bot._route_event({
-            "event_type": "soul.risk_alert",
-            "metadata": {"severity": "critical"},
-        })
+        await bot._route_event(
+            {
+                "event_type": "soul.risk_alert",
+                "metadata": {"severity": "critical"},
+            }
+        )
         bot._handle_soul_event.assert_called_once()
 
     async def test_critical_event_goes_to_alerts(self, bot):
         mock_channel = AsyncMock()
         bot._channels = {"nile-alerts": mock_channel}
-        await bot._route_event({
-            "event_type": "scan.completed",
-            "metadata": {"severity": "critical"},
-        })
+        await bot._route_event(
+            {
+                "event_type": "scan.completed",
+                "metadata": {"severity": "critical"},
+            }
+        )
         mock_channel.send.assert_called_once()
 
     async def test_normal_event_goes_to_feed(self, bot):
         mock_channel = AsyncMock()
         bot._channels = {"nile-feed": mock_channel}
-        await bot._route_event({
-            "event_type": "agent.joined",
-            "metadata": {"name": "TestBot"},
-        })
+        await bot._route_event(
+            {
+                "event_type": "agent.joined",
+                "metadata": {"name": "TestBot"},
+            }
+        )
         mock_channel.send.assert_called_once()
 
     async def test_no_channel_skips(self, bot):
         bot._channels = {}
         # Should not raise
-        await bot._route_event({
-            "event_type": "agent.joined",
-            "metadata": {},
-        })
+        await bot._route_event(
+            {
+                "event_type": "agent.joined",
+                "metadata": {},
+            }
+        )
 
     async def test_scan_completed_triggers_screenshot(self, bot):
         mock_channel = AsyncMock()
         bot._channels = {"nile-feed": mock_channel}
         bot._post_screenshot_to = AsyncMock()
         with patch("nile.discord.bot.asyncio") as mock_asyncio:
-            await bot._route_event({
-                "event_type": "scan.completed",
-                "metadata": {},
-            })
+            await bot._route_event(
+                {
+                    "event_type": "scan.completed",
+                    "metadata": {},
+                }
+            )
             mock_asyncio.create_task.assert_called_once()
 
 
@@ -250,14 +257,16 @@ class TestPostRiskAlert:
     async def test_posts_to_alerts_channel(self, bot):
         mock_channel = AsyncMock()
         bot._channels = {"nile-alerts": mock_channel}
-        await bot._post_risk_alert({
-            "severity": "critical",
-            "risk_type": "wash_trading",
-            "token_id": "tok123",
-            "action": "pause",
-            "pause_minutes": 30,
-            "details": {"volume": 1000},
-        })
+        await bot._post_risk_alert(
+            {
+                "severity": "critical",
+                "risk_type": "wash_trading",
+                "token_id": "tok123",
+                "action": "pause",
+                "pause_minutes": 30,
+                "details": {"volume": 1000},
+            }
+        )
         mock_channel.send.assert_called_once()
 
     async def test_no_channel_returns(self, bot):
@@ -267,10 +276,12 @@ class TestPostRiskAlert:
     async def test_warning_severity_color(self, bot):
         mock_channel = AsyncMock()
         bot._channels = {"nile-alerts": mock_channel}
-        await bot._post_risk_alert({
-            "severity": "warning",
-            "risk_type": "unusual_volume",
-        })
+        await bot._post_risk_alert(
+            {
+                "severity": "warning",
+                "risk_type": "unusual_volume",
+            }
+        )
         mock_channel.send.assert_called_once()
 
 
@@ -279,10 +290,12 @@ class TestPostGraduation:
     async def test_posts_graduation(self, bot):
         mock_channel = AsyncMock()
         bot._channels = {"nile-feed": mock_channel}
-        await bot._post_graduation({
-            "token_symbol": "SOUL",
-            "reserve_sol": 42.5,
-        })
+        await bot._post_graduation(
+            {
+                "token_symbol": "SOUL",
+                "reserve_sol": 42.5,
+            }
+        )
         mock_channel.send.assert_called_once()
 
     async def test_no_channel(self, bot):
@@ -295,11 +308,13 @@ class TestPostOracleConfirmed:
     async def test_posts_oracle(self, bot):
         mock_channel = AsyncMock()
         bot._channels = {"nile-feed": mock_channel}
-        await bot._post_oracle_confirmed({
-            "person_id": "p1",
-            "impact_score": 50,
-            "event_type": "sports_win",
-        })
+        await bot._post_oracle_confirmed(
+            {
+                "person_id": "p1",
+                "impact_score": 50,
+                "event_type": "sports_win",
+            }
+        )
         mock_channel.send.assert_called_once()
 
     async def test_no_channel(self, bot):
@@ -312,10 +327,12 @@ class TestPostOraclePending:
     async def test_posts_pending(self, bot):
         mock_channel = AsyncMock()
         bot._channels = {"nile-feed": mock_channel}
-        await bot._post_oracle_pending({
-            "headline": "Player wins championship",
-            "source": "twitter",
-        })
+        await bot._post_oracle_pending(
+            {
+                "headline": "Player wins championship",
+                "source": "twitter",
+            }
+        )
         mock_channel.send.assert_called_once()
 
     async def test_no_channel(self, bot):
@@ -328,25 +345,29 @@ class TestPostValuationChange:
     async def test_posts_increase(self, bot):
         mock_channel = AsyncMock()
         bot._channels = {"nile-feed": mock_channel}
-        await bot._post_valuation_change({
-            "person_id": "p1",
-            "old_score": 50.0,
-            "new_score": 75.0,
-            "change_pct": 50.0,
-            "fair_value_usd": 12.50,
-        })
+        await bot._post_valuation_change(
+            {
+                "person_id": "p1",
+                "old_score": 50.0,
+                "new_score": 75.0,
+                "change_pct": 50.0,
+                "fair_value_usd": 12.50,
+            }
+        )
         mock_channel.send.assert_called_once()
 
     async def test_posts_decrease(self, bot):
         mock_channel = AsyncMock()
         bot._channels = {"nile-feed": mock_channel}
-        await bot._post_valuation_change({
-            "person_id": "p1",
-            "old_score": 75.0,
-            "new_score": 50.0,
-            "change_pct": -33.3,
-            "fair_value_usd": 8.00,
-        })
+        await bot._post_valuation_change(
+            {
+                "person_id": "p1",
+                "old_score": 75.0,
+                "new_score": 50.0,
+                "change_pct": -33.3,
+                "fair_value_usd": 8.00,
+            }
+        )
         mock_channel.send.assert_called_once()
 
     async def test_no_channel(self, bot):

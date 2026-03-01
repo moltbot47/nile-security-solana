@@ -1,6 +1,6 @@
 """Tests for metrics middleware — Prometheus-compatible in-process metrics."""
 
-from nile.middleware.metrics import _Metrics, _looks_like_id
+from nile.middleware.metrics import _looks_like_id, _Metrics
 
 
 class TestMetrics:

@@ -8,12 +8,16 @@ import pytest
 def _mock_solana_modules():
     """Build a complete mock module tree for solders + solana."""
     mock_pubkey_cls = MagicMock()
-    mock_pubkey_cls.from_string = MagicMock(side_effect=lambda s: MagicMock(
-        __bytes__=lambda _: b"\x00" * 32,
-    ))
-    mock_pubkey_cls.from_bytes = MagicMock(side_effect=lambda b: MagicMock(
-        __str__=lambda _: "MockPubkey",
-    ))
+    mock_pubkey_cls.from_string = MagicMock(
+        side_effect=lambda s: MagicMock(
+            __bytes__=lambda _: b"\x00" * 32,
+        )
+    )
+    mock_pubkey_cls.from_bytes = MagicMock(
+        side_effect=lambda b: MagicMock(
+            __str__=lambda _: "MockPubkey",
+        )
+    )
     mock_pubkey_cls.find_program_address = MagicMock(
         return_value=(MagicMock(__str__=lambda _: "PDAAddr"), 255)
     )
@@ -21,7 +25,7 @@ def _mock_solana_modules():
     mock_keypair_cls = MagicMock()
     mock_deployer = MagicMock()
     mock_deployer.pubkey.return_value = MagicMock(
-        __bytes__=lambda _: b"\xAA" * 32,
+        __bytes__=lambda _: b"\xaa" * 32,
         __str__=lambda _: "DeployerPubkey",
     )
     mock_keypair_cls.from_bytes = MagicMock(return_value=mock_deployer)
@@ -92,7 +96,10 @@ class TestSubmitScoreOnchain:
 
             result = await submit_score_onchain(
                 "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
-                90, 85, 80, 75,
+                90,
+                85,
+                80,
+                75,
                 details_uri="ipfs://QmTest",
             )
             assert result == "TxSig123ABC"

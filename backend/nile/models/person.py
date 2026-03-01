@@ -1,11 +1,19 @@
 """Person model — represents a human whose NIL value is tokenized."""
 
+from __future__ import annotations
+
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import JSON, DateTime, Numeric, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from nile.models.base import Base, TimestampMixin, UUIDMixin
+
+if TYPE_CHECKING:
+    from nile.models.oracle_event import OracleEvent
+    from nile.models.soul_token import SoulToken
+    from nile.models.valuation_snapshot import ValuationSnapshot
 
 
 class Person(UUIDMixin, TimestampMixin, Base):
@@ -43,12 +51,12 @@ class Person(UUIDMixin, TimestampMixin, Base):
     nile_total_score: Mapped[float] = mapped_column(Numeric(5, 2), default=0)
 
     # Relationships
-    soul_token: Mapped["SoulToken | None"] = relationship(  # noqa: F821
+    soul_token: Mapped[SoulToken | None] = relationship(
         "SoulToken", back_populates="person", uselist=False
     )
-    valuation_snapshots: Mapped[list["ValuationSnapshot"]] = relationship(  # noqa: F821
+    valuation_snapshots: Mapped[list[ValuationSnapshot]] = relationship(
         "ValuationSnapshot", back_populates="person", lazy="dynamic"
     )
-    oracle_events: Mapped[list["OracleEvent"]] = relationship(  # noqa: F821
+    oracle_events: Mapped[list[OracleEvent]] = relationship(
         "OracleEvent", back_populates="person", lazy="dynamic"
     )

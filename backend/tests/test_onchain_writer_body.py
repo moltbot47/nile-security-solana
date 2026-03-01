@@ -51,11 +51,14 @@ class TestSubmitScoreOnchain:
     async def test_import_error_returns_none(self, _mock):
         """When solders is not installed, returns None gracefully."""
         # Force ImportError by removing mock solders if present
-        with patch.dict(sys.modules, {
-            "solana": None,
-            "solana.rpc": None,
-            "solana.rpc.async_api": None,
-        }):
+        with patch.dict(
+            sys.modules,
+            {
+                "solana": None,
+                "solana.rpc": None,
+                "solana.rpc.async_api": None,
+            },
+        ):
             result = await submit_score_onchain("addr", 80, 70, 60, 50)
             assert result is None
 
@@ -77,9 +80,7 @@ class TestSubmitScoreOnchain:
         mock_client = AsyncMock()
         mock_blockhash_resp = MagicMock()
         mock_blockhash_resp.value.blockhash = MagicMock()
-        mock_client.get_latest_blockhash = AsyncMock(
-            return_value=mock_blockhash_resp
-        )
+        mock_client.get_latest_blockhash = AsyncMock(return_value=mock_blockhash_resp)
         mock_result = MagicMock()
         mock_result.value = "txsig123"
         mock_client.send_transaction = AsyncMock(return_value=mock_result)
@@ -88,25 +89,30 @@ class TestSubmitScoreOnchain:
         mock_base58 = MagicMock()
         mock_base58.b58decode.return_value = b"\x00" * 64
 
-        with patch.dict(sys.modules, {
-            "base58": mock_base58,
-            "solana": MagicMock(),
-            "solana.rpc": MagicMock(),
-            "solana.rpc.async_api": MagicMock(
-                AsyncClient=MagicMock(return_value=mock_client)
-            ),
-            "solders": MagicMock(),
-            "solders.keypair": MagicMock(
-                Keypair=MagicMock(from_bytes=MagicMock(return_value=mock_keypair))
-            ),
-            "solders.pubkey": MagicMock(Pubkey=mock_pubkey),
-            "solders.instruction": MagicMock(),
-            "solders.message": MagicMock(),
-            "solders.transaction": MagicMock(),
-        }):
+        with patch.dict(
+            sys.modules,
+            {
+                "base58": mock_base58,
+                "solana": MagicMock(),
+                "solana.rpc": MagicMock(),
+                "solana.rpc.async_api": MagicMock(AsyncClient=MagicMock(return_value=mock_client)),
+                "solders": MagicMock(),
+                "solders.keypair": MagicMock(
+                    Keypair=MagicMock(from_bytes=MagicMock(return_value=mock_keypair))
+                ),
+                "solders.pubkey": MagicMock(Pubkey=mock_pubkey),
+                "solders.instruction": MagicMock(),
+                "solders.message": MagicMock(),
+                "solders.transaction": MagicMock(),
+            },
+        ):
             result = await submit_score_onchain(
                 "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
-                80, 70, 60, 50, "ipfs://details",
+                80,
+                70,
+                60,
+                50,
+                "ipfs://details",
             )
             assert result is not None
 

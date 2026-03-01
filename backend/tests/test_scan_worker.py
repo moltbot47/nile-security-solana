@@ -56,13 +56,15 @@ class TestProcessScanJob:
             essence_score=72.0,
             details={"name": {}, "image": {}, "likeness": {}, "essence": {}},
         )
-        mock_analyzer.analyze = AsyncMock(return_value={
-            "score": mock_score,
-            "analysis_type": "program",
-            "idl_analysis": {"has_idl": True},
-            "ecosystem": {"known": True},
-            "exploit_matches": [],
-        })
+        mock_analyzer.analyze = AsyncMock(
+            return_value={
+                "score": mock_score,
+                "analysis_type": "program",
+                "idl_analysis": {"has_idl": True},
+                "ecosystem": {"known": True},
+                "exploit_matches": [],
+            }
+        )
 
         await process_scan_job(db_session, job)
 
@@ -76,6 +78,7 @@ class TestProcessScanJob:
     async def test_contract_not_found_fails(self, mock_analyzer, db_session):
         """Job referencing a nonexistent contract should fail."""
         import uuid
+
         job = ScanJob(
             contract_id=uuid.uuid4(),
             status="queued",

@@ -1,6 +1,5 @@
 """Extended tests for persons API — trending, sort, verification filter, oracle events."""
 
-
 import pytest
 
 from nile.models.oracle_event import OracleEvent
@@ -152,9 +151,7 @@ class TestOracleEventsWithFilter:
             )
         await db_session.flush()
 
-        resp = await client.get(
-            f"/api/v1/persons/{person.id}/oracle-events?status=pending"
-        )
+        resp = await client.get(f"/api/v1/persons/{person.id}/oracle-events?status=pending")
         assert resp.status_code == 200
         data = resp.json()
         assert len(data) == 1

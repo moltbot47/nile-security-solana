@@ -33,13 +33,17 @@ def _install_mock_solders():
     mock_rpc_async_api = MagicMock()
     mock_rpc_async_api.AsyncClient = mock_async_client_cls
 
-    return {
-        "solders": MagicMock(),
-        "solders.pubkey": mock_pubkey_mod,
-        "solders.rpc": MagicMock(),
-        "solders.rpc.api": mock_rpc_api,
-        "solders.rpc.async_api": mock_rpc_async_api,
-    }, mock_pubkey_cls, mock_async_client_cls
+    return (
+        {
+            "solders": MagicMock(),
+            "solders.pubkey": mock_pubkey_mod,
+            "solders.rpc": MagicMock(),
+            "solders.rpc.api": mock_rpc_api,
+            "solders.rpc.async_api": mock_rpc_async_api,
+        },
+        mock_pubkey_cls,
+        mock_async_client_cls,
+    )
 
 
 @pytest.mark.asyncio
@@ -91,9 +95,7 @@ class TestGetProgramAuthority:
             mock_client.get_account_info = AsyncMock(return_value=mock_resp)
             svc._async_client = mock_client
 
-            result = await svc.get_program_authority(
-                "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-            )
+            result = await svc.get_program_authority("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
             assert result is None
 
     async def test_short_data_not_upgradeable(self):
@@ -110,9 +112,7 @@ class TestGetProgramAuthority:
             mock_client.get_account_info = AsyncMock(return_value=mock_resp1)
             svc._async_client = mock_client
 
-            result = await svc.get_program_authority(
-                "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-            )
+            result = await svc.get_program_authority("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
             assert result == {"upgradeable": False, "authority": None}
 
     async def test_programdata_with_authority(self):
@@ -130,19 +130,15 @@ class TestGetProgramAuthority:
             # Second call: programdata account with authority
             pd_data = bytearray(100)
             pd_data[12] = 1  # has_authority = true
-            pd_data[13:45] = b"\xAA" * 32  # authority pubkey
+            pd_data[13:45] = b"\xaa" * 32  # authority pubkey
             mock_resp2 = MagicMock()
             mock_resp2.value = MagicMock()
             mock_resp2.value.data = bytes(pd_data)
 
-            mock_client.get_account_info = AsyncMock(
-                side_effect=[mock_resp1, mock_resp2]
-            )
+            mock_client.get_account_info = AsyncMock(side_effect=[mock_resp1, mock_resp2])
             svc._async_client = mock_client
 
-            result = await svc.get_program_authority(
-                "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-            )
+            result = await svc.get_program_authority("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
             assert result is not None
             assert result["upgradeable"] is True
 
@@ -151,14 +147,10 @@ class TestGetProgramAuthority:
         with patch.dict("sys.modules", mods):
             svc = SolanaChainService()
             mock_client = AsyncMock()
-            mock_client.get_account_info = AsyncMock(
-                side_effect=RuntimeError("RPC error")
-            )
+            mock_client.get_account_info = AsyncMock(side_effect=RuntimeError("RPC error"))
             svc._async_client = mock_client
 
-            result = await svc.get_program_authority(
-                "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-            )
+            result = await svc.get_program_authority("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
             assert result is None
 
 
@@ -179,9 +171,7 @@ class TestGetTokenInfo:
             mock_client.get_account_info = AsyncMock(return_value=mock_resp)
             svc._async_client = mock_client
 
-            result = await svc.get_token_info(
-                "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-            )
+            result = await svc.get_token_info("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
             assert result is None
 
     async def test_short_data(self):
@@ -195,9 +185,7 @@ class TestGetTokenInfo:
             mock_client.get_account_info = AsyncMock(return_value=mock_resp)
             svc._async_client = mock_client
 
-            result = await svc.get_token_info(
-                "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-            )
+            result = await svc.get_token_info("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
             assert result is None
 
     async def test_valid_mint_data(self):
@@ -211,7 +199,7 @@ class TestGetTokenInfo:
             # mint_authority option = 1 (Some)
             struct.pack_into("<I", data, 0, 1)
             # mint_authority pubkey (32 bytes)
-            data[4:36] = b"\xBB" * 32
+            data[4:36] = b"\xbb" * 32
             # supply = 1000000 (u64 LE)
             struct.pack_into("<Q", data, 36, 1000000)
             # decimals = 9
@@ -225,9 +213,7 @@ class TestGetTokenInfo:
             mock_client.get_account_info = AsyncMock(return_value=mock_resp)
             svc._async_client = mock_client
 
-            result = await svc.get_token_info(
-                "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-            )
+            result = await svc.get_token_info("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
             assert result is not None
             assert result["supply"] == 1000000
             assert result["decimals"] == 9
@@ -239,14 +225,10 @@ class TestGetTokenInfo:
         with patch.dict("sys.modules", mods):
             svc = SolanaChainService()
             mock_client = AsyncMock()
-            mock_client.get_account_info = AsyncMock(
-                side_effect=RuntimeError("RPC fail")
-            )
+            mock_client.get_account_info = AsyncMock(side_effect=RuntimeError("RPC fail"))
             svc._async_client = mock_client
 
-            result = await svc.get_token_info(
-                "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-            )
+            result = await svc.get_token_info("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
             assert result is None
 
 
@@ -307,9 +289,7 @@ class TestGetSolPriceUsd:
         with patch.dict("sys.modules", mods):
             svc = SolanaChainService()
             mock_client = AsyncMock()
-            mock_client.get_account_info = AsyncMock(
-                side_effect=RuntimeError("RPC error")
-            )
+            mock_client.get_account_info = AsyncMock(side_effect=RuntimeError("RPC error"))
             svc._async_client = mock_client
 
             result = await svc.get_sol_price_usd()

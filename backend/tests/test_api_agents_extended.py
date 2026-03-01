@@ -44,9 +44,7 @@ class TestRegisterAgent:
         assert data["status"] == "active"
 
     @patch("nile.routers.v1.agents.publish_event", new_callable=AsyncMock)
-    async def test_register_duplicate_name(
-        self, _mock_pub, client, db_session, registered_agent
-    ):
+    async def test_register_duplicate_name(self, _mock_pub, client, db_session, registered_agent):
         agent, _ = registered_agent
         resp = await client.post(
             "/api/v1/agents/register",
@@ -70,9 +68,7 @@ class TestListAgents:
         data = resp.json()
         assert len(data) >= 1
 
-    async def test_filter_by_capability(
-        self, client, db_session, registered_agent
-    ):
+    async def test_filter_by_capability(self, client, db_session, registered_agent):
         resp = await client.get("/api/v1/agents?capability=detect")
         assert resp.status_code == 200
         data = resp.json()
@@ -98,20 +94,14 @@ class TestLeaderboard:
         resp = await client.get("/api/v1/agents/leaderboard")
         assert resp.status_code == 200
 
-    async def test_leaderboard_filter_capability(
-        self, client, db_session, registered_agent
-    ):
-        resp = await client.get(
-            "/api/v1/agents/leaderboard?capability=exploit"
-        )
+    async def test_leaderboard_filter_capability(self, client, db_session, registered_agent):
+        resp = await client.get("/api/v1/agents/leaderboard?capability=exploit")
         assert resp.status_code == 200
 
 
 @pytest.mark.asyncio
 class TestUpdateAgent:
-    async def test_update_own_agent(
-        self, client, db_session, registered_agent
-    ):
+    async def test_update_own_agent(self, client, db_session, registered_agent):
         agent, token = registered_agent
         resp = await client.patch(
             f"/api/v1/agents/{agent.id}",
@@ -121,9 +111,7 @@ class TestUpdateAgent:
         assert resp.status_code == 200
         assert resp.json()["description"] == "Updated description"
 
-    async def test_update_other_agent_forbidden(
-        self, client, db_session, registered_agent
-    ):
+    async def test_update_other_agent_forbidden(self, client, db_session, registered_agent):
         _, token = registered_agent
         resp = await client.patch(
             f"/api/v1/agents/{uuid.uuid4()}",
@@ -144,9 +132,7 @@ class TestHeartbeat:
         assert resp.status_code == 200
         assert resp.json()["status"] == "ok"
 
-    async def test_heartbeat_other_forbidden(
-        self, client, db_session, registered_agent
-    ):
+    async def test_heartbeat_other_forbidden(self, client, db_session, registered_agent):
         _, token = registered_agent
         resp = await client.post(
             f"/api/v1/agents/{uuid.uuid4()}/heartbeat",
@@ -157,9 +143,7 @@ class TestHeartbeat:
 
 @pytest.mark.asyncio
 class TestContributions:
-    async def test_empty_contributions(
-        self, client, db_session, registered_agent
-    ):
+    async def test_empty_contributions(self, client, db_session, registered_agent):
         agent, _ = registered_agent
         resp = await client.get(f"/api/v1/agents/{agent.id}/contributions")
         assert resp.status_code == 200

@@ -340,9 +340,7 @@ class TestRunRiskChecks:
         )
         await db_session.flush()
 
-        alerts = await run_risk_checks(
-            db_session, soul_token_id=token.id, trader_address="seller"
-        )
+        alerts = await run_risk_checks(db_session, soul_token_id=token.id, trader_address="seller")
         assert any(a["severity"] == "critical" for a in alerts)
         assert is_circuit_breaker_active(str(token.id))  # breaker keyed by str
 

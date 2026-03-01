@@ -13,9 +13,7 @@ def _install_mock_solders():
     mock_pubkey_cls = MagicMock()
     # from_string returns a mock pubkey
     mock_pubkey_cls.from_string = MagicMock(return_value=MagicMock())
-    mock_pubkey_cls.find_program_address = MagicMock(
-        return_value=(MagicMock(), 255)
-    )
+    mock_pubkey_cls.find_program_address = MagicMock(return_value=(MagicMock(), 255))
     mock_pubkey_cls.from_bytes = MagicMock(return_value=MagicMock())
 
     mock_pubkey_mod = MagicMock()
@@ -42,14 +40,10 @@ class TestGetProgramInfoBody:
             mock_account.data = b"\x00" * 200
             mock_resp = MagicMock()
             mock_resp.value = mock_account
-            mock_client.get_account_info = AsyncMock(
-                return_value=mock_resp
-            )
+            mock_client.get_account_info = AsyncMock(return_value=mock_resp)
             svc._async_client = mock_client
 
-            result = await svc.get_program_info(
-                "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-            )
+            result = await svc.get_program_info("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
             assert result is not None
             assert result["executable"] is True
             assert result["lamports"] == 5000000
@@ -71,14 +65,10 @@ class TestGetProgramAuthorityBody:
             mock_account.data = b"\x00\x01\x02"  # < 4 bytes
             mock_resp = MagicMock()
             mock_resp.value = mock_account
-            mock_client.get_account_info = AsyncMock(
-                return_value=mock_resp
-            )
+            mock_client.get_account_info = AsyncMock(return_value=mock_resp)
             svc._async_client = mock_client
 
-            result = await svc.get_program_authority(
-                "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-            )
+            result = await svc.get_program_authority("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
             assert result is not None
             assert result["upgradeable"] is False
 
@@ -93,14 +83,10 @@ class TestGetProgramAuthorityBody:
             mock_client = AsyncMock()
             mock_resp = MagicMock()
             mock_resp.value = None
-            mock_client.get_account_info = AsyncMock(
-                return_value=mock_resp
-            )
+            mock_client.get_account_info = AsyncMock(return_value=mock_resp)
             svc._async_client = mock_client
 
-            result = await svc.get_program_authority(
-                "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-            )
+            result = await svc.get_program_authority("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
             assert result is None
 
 
@@ -119,14 +105,10 @@ class TestGetTokenInfoBody:
             mock_account.data = b"\x00" * 50  # < 82 bytes
             mock_resp = MagicMock()
             mock_resp.value = mock_account
-            mock_client.get_account_info = AsyncMock(
-                return_value=mock_resp
-            )
+            mock_client.get_account_info = AsyncMock(return_value=mock_resp)
             svc._async_client = mock_client
 
-            result = await svc.get_token_info(
-                "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-            )
+            result = await svc.get_token_info("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
             assert result is None
 
     @patch(
@@ -136,14 +118,10 @@ class TestGetTokenInfoBody:
     async def test_exception_returns_none(self, _mock):
         svc = SolanaChainService()
         mock_client = AsyncMock()
-        mock_client.get_account_info = AsyncMock(
-            side_effect=Exception("RPC error")
-        )
+        mock_client.get_account_info = AsyncMock(side_effect=Exception("RPC error"))
         svc._async_client = mock_client
 
-        result = await svc.get_token_info(
-            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-        )
+        result = await svc.get_token_info("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
         assert result is None
 
 
@@ -152,9 +130,7 @@ class TestGetSolPriceUsd:
     async def test_exception_returns_none(self):
         svc = SolanaChainService()
         mock_client = AsyncMock()
-        mock_client.get_account_info = AsyncMock(
-            side_effect=Exception("Pyth error")
-        )
+        mock_client.get_account_info = AsyncMock(side_effect=Exception("Pyth error"))
         svc._async_client = mock_client
 
         result = await svc.get_sol_price_usd()
@@ -167,9 +143,7 @@ class TestGetSolPriceUsd:
             mock_client = AsyncMock()
             mock_resp = MagicMock()
             mock_resp.value = None
-            mock_client.get_account_info = AsyncMock(
-                return_value=mock_resp
-            )
+            mock_client.get_account_info = AsyncMock(return_value=mock_resp)
             svc._async_client = mock_client
 
             result = await svc.get_sol_price_usd()
@@ -184,9 +158,7 @@ class TestGetSolPriceUsd:
             mock_account.data = b"\x00" * 100  # < 208
             mock_resp = MagicMock()
             mock_resp.value = mock_account
-            mock_client.get_account_info = AsyncMock(
-                return_value=mock_resp
-            )
+            mock_client.get_account_info = AsyncMock(return_value=mock_resp)
             svc._async_client = mock_client
 
             result = await svc.get_sol_price_usd()
@@ -211,9 +183,7 @@ class TestGetTransactionHistoryBody:
             mock_sig.block_time = 1700000000
             mock_resp = MagicMock()
             mock_resp.value = [mock_sig]
-            mock_client.get_signatures_for_address = AsyncMock(
-                return_value=mock_resp
-            )
+            mock_client.get_signatures_for_address = AsyncMock(return_value=mock_resp)
             svc._async_client = mock_client
 
             result = await svc.get_transaction_history(
@@ -229,14 +199,10 @@ class TestGetTransactionHistoryBody:
     async def test_exception_returns_empty(self, _mock):
         svc = SolanaChainService()
         mock_client = AsyncMock()
-        mock_client.get_signatures_for_address = AsyncMock(
-            side_effect=Exception("RPC error")
-        )
+        mock_client.get_signatures_for_address = AsyncMock(side_effect=Exception("RPC error"))
         svc._async_client = mock_client
 
-        result = await svc.get_transaction_history(
-            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-        )
+        result = await svc.get_transaction_history("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
         assert result == []
 
 

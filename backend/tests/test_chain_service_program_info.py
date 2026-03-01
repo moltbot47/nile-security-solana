@@ -44,9 +44,7 @@ class TestGetProgramInfo:
             mock_client.get_account_info = AsyncMock(return_value=mock_resp)
             svc._async_client = mock_client
 
-            result = await svc.get_program_info(
-                "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-            )
+            result = await svc.get_program_info("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
             assert result is not None
             assert result["executable"] is True
 
@@ -57,14 +55,10 @@ class TestGetProgramInfo:
 
             svc = SolanaChainService()
             mock_client = AsyncMock()
-            mock_client.get_account_info = AsyncMock(
-                side_effect=RuntimeError("RPC error")
-            )
+            mock_client.get_account_info = AsyncMock(side_effect=RuntimeError("RPC error"))
             svc._async_client = mock_client
 
-            result = await svc.get_program_info(
-                "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-            )
+            result = await svc.get_program_info("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
             assert result is None
 
 
@@ -76,9 +70,7 @@ class TestGetProgramAuthorityPdaResp:
         mock_pk.from_string = MagicMock(
             side_effect=lambda s: MagicMock(__bytes__=lambda _: b"\x00" * 32)
         )
-        mock_pk.find_program_address = MagicMock(
-            return_value=(MagicMock(), 255)
-        )
+        mock_pk.find_program_address = MagicMock(return_value=(MagicMock(), 255))
         # Also add Pk alias
         mods["solders.pubkey"].Pk = mock_pk
 
@@ -97,14 +89,10 @@ class TestGetProgramAuthorityPdaResp:
             mock_resp2 = MagicMock()
             mock_resp2.value = None
 
-            mock_client.get_account_info = AsyncMock(
-                side_effect=[mock_resp1, mock_resp2]
-            )
+            mock_client.get_account_info = AsyncMock(side_effect=[mock_resp1, mock_resp2])
             svc._async_client = mock_client
 
-            result = await svc.get_program_authority(
-                "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-            )
+            result = await svc.get_program_authority("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
             assert result == {"upgradeable": False, "authority": None}
 
     async def test_pd_short_data(self):
@@ -113,9 +101,7 @@ class TestGetProgramAuthorityPdaResp:
         mock_pk.from_string = MagicMock(
             side_effect=lambda s: MagicMock(__bytes__=lambda _: b"\x00" * 32)
         )
-        mock_pk.find_program_address = MagicMock(
-            return_value=(MagicMock(), 255)
-        )
+        mock_pk.find_program_address = MagicMock(return_value=(MagicMock(), 255))
         mods["solders.pubkey"].Pk = mock_pk
 
         with patch.dict("sys.modules", mods):
@@ -132,14 +118,10 @@ class TestGetProgramAuthorityPdaResp:
             mock_resp2.value = MagicMock()
             mock_resp2.value.data = b"\x00" * 10  # < 45
 
-            mock_client.get_account_info = AsyncMock(
-                side_effect=[mock_resp1, mock_resp2]
-            )
+            mock_client.get_account_info = AsyncMock(side_effect=[mock_resp1, mock_resp2])
             svc._async_client = mock_client
 
-            result = await svc.get_program_authority(
-                "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-            )
+            result = await svc.get_program_authority("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
             assert result == {"upgradeable": False, "authority": None}
 
 
@@ -168,7 +150,7 @@ class TestGetTokenInfoFreeze:
             struct.pack_into("<Q", data, 36, 5000000)
             data[44] = 6
             struct.pack_into("<I", data, 46, 1)  # freeze authority active
-            data[50:82] = b"\xCC" * 32
+            data[50:82] = b"\xcc" * 32
 
             mock_resp = MagicMock()
             mock_resp.value = MagicMock()
@@ -176,9 +158,7 @@ class TestGetTokenInfoFreeze:
             mock_client.get_account_info = AsyncMock(return_value=mock_resp)
             svc._async_client = mock_client
 
-            result = await svc.get_token_info(
-                "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-            )
+            result = await svc.get_token_info("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
             assert result is not None
             assert result["freeze_authority_active"] is True
             assert result["mint_authority_active"] is False

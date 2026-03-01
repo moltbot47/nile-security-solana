@@ -20,7 +20,7 @@ def _load_idl(program_name: str) -> dict | None:
     if not idl_path.exists():
         logger.warning("IDL not found: %s", idl_path)
         return None
-    return json.loads(idl_path.read_text())
+    return json.loads(idl_path.read_text())  # type: ignore[no-any-return]
 
 
 def validate_solana_address(address: str) -> bool:
@@ -229,7 +229,7 @@ class SolanaChainService:
             exponent = struct.unpack_from("<i", data, 20)[0]
             price = struct.unpack_from("<q", data, 208)[0]
 
-            return price * (10**exponent)
+            return float(price * (10**exponent))
         except Exception:
             logger.exception("Failed to get SOL price from Pyth")
             return None

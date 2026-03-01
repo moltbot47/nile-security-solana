@@ -35,9 +35,7 @@ class TestAnalyzeIdlSecurity:
             "instructions": [
                 {
                     "name": "cross_invoke",
-                    "accounts": [
-                        {"name": "source", "isMut": True, "isSigner": True}
-                    ],
+                    "accounts": [{"name": "source", "isMut": True, "isSigner": True}],
                     "args": [{"name": "target_program", "type": "pubkey"}],
                 }
             ]

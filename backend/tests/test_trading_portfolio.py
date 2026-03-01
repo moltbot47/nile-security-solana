@@ -90,9 +90,7 @@ class TestPortfolioEndpoint:
 @pytest.mark.asyncio
 class TestSellRiskAlerts:
     @patch("nile.routers.v1.trading.run_risk_checks", new_callable=AsyncMock)
-    async def test_sell_with_risk_alerts_logged(
-        self, mock_risk, client, db_session, portfolio_env
-    ):
+    async def test_sell_with_risk_alerts_logged(self, mock_risk, client, db_session, portfolio_env):
         """Risk alerts after sell are logged but trade still succeeds."""
         mock_risk.return_value = [{"type": "unusual_volume", "severity": "warning"}]
         person, _, _, _, jwt, _ = portfolio_env
@@ -112,9 +110,7 @@ class TestSellRiskAlerts:
 @pytest.mark.asyncio
 class TestTradeHistory:
     @patch("nile.routers.v1.trading.run_risk_checks", new_callable=AsyncMock)
-    async def test_history_filtered_by_trader(
-        self, mock_risk, client, db_session, portfolio_env
-    ):
+    async def test_history_filtered_by_trader(self, mock_risk, client, db_session, portfolio_env):
         person, _, _, _, jwt, _ = portfolio_env
         addr = "J" * 44
         # Create a trade first

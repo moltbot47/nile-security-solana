@@ -12,15 +12,17 @@ class TestAssetHealthGrades:
         contract = Contract(name="A+ Program", chain="solana")
         db_session.add(contract)
         await db_session.flush()
-        db_session.add(NileScore(
-            contract_id=contract.id,
-            total_score=95.0,
-            name_score=95.0,
-            image_score=95.0,
-            likeness_score=95.0,
-            essence_score=95.0,
-            trigger_type="scan",
-        ))
+        db_session.add(
+            NileScore(
+                contract_id=contract.id,
+                total_score=95.0,
+                name_score=95.0,
+                image_score=95.0,
+                likeness_score=95.0,
+                essence_score=95.0,
+                trigger_type="scan",
+            )
+        )
         await db_session.flush()
 
         resp = await client.get("/api/v1/kpis/asset-health")
@@ -31,15 +33,17 @@ class TestAssetHealthGrades:
         contract = Contract(name="B Program", chain="solana")
         db_session.add(contract)
         await db_session.flush()
-        db_session.add(NileScore(
-            contract_id=contract.id,
-            total_score=75.0,
-            name_score=75.0,
-            image_score=75.0,
-            likeness_score=75.0,
-            essence_score=75.0,
-            trigger_type="scan",
-        ))
+        db_session.add(
+            NileScore(
+                contract_id=contract.id,
+                total_score=75.0,
+                name_score=75.0,
+                image_score=75.0,
+                likeness_score=75.0,
+                essence_score=75.0,
+                trigger_type="scan",
+            )
+        )
         await db_session.flush()
 
         resp = await client.get("/api/v1/kpis/asset-health")
@@ -51,15 +55,17 @@ class TestAssetHealthGrades:
         contract = Contract(name="C Program", chain="solana")
         db_session.add(contract)
         await db_session.flush()
-        db_session.add(NileScore(
-            contract_id=contract.id,
-            total_score=65.0,
-            name_score=65.0,
-            image_score=65.0,
-            likeness_score=65.0,
-            essence_score=65.0,
-            trigger_type="scan",
-        ))
+        db_session.add(
+            NileScore(
+                contract_id=contract.id,
+                total_score=65.0,
+                name_score=65.0,
+                image_score=65.0,
+                likeness_score=65.0,
+                essence_score=65.0,
+                trigger_type="scan",
+            )
+        )
         await db_session.flush()
 
         resp = await client.get("/api/v1/kpis/asset-health")
@@ -71,15 +77,17 @@ class TestAssetHealthGrades:
         contract = Contract(name="D Program", chain="solana")
         db_session.add(contract)
         await db_session.flush()
-        db_session.add(NileScore(
-            contract_id=contract.id,
-            total_score=55.0,
-            name_score=55.0,
-            image_score=55.0,
-            likeness_score=55.0,
-            essence_score=55.0,
-            trigger_type="scan",
-        ))
+        db_session.add(
+            NileScore(
+                contract_id=contract.id,
+                total_score=55.0,
+                name_score=55.0,
+                image_score=55.0,
+                likeness_score=55.0,
+                essence_score=55.0,
+                trigger_type="scan",
+            )
+        )
         await db_session.flush()
 
         resp = await client.get("/api/v1/kpis/asset-health")
@@ -91,15 +99,17 @@ class TestAssetHealthGrades:
         contract = Contract(name="F Program", chain="solana")
         db_session.add(contract)
         await db_session.flush()
-        db_session.add(NileScore(
-            contract_id=contract.id,
-            total_score=30.0,
-            name_score=30.0,
-            image_score=30.0,
-            likeness_score=30.0,
-            essence_score=30.0,
-            trigger_type="scan",
-        ))
+        db_session.add(
+            NileScore(
+                contract_id=contract.id,
+                total_score=30.0,
+                name_score=30.0,
+                image_score=30.0,
+                likeness_score=30.0,
+                essence_score=30.0,
+                trigger_type="scan",
+            )
+        )
         await db_session.flush()
 
         resp = await client.get("/api/v1/kpis/asset-health")

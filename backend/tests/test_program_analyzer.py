@@ -52,13 +52,15 @@ class TestAnalyze:
     @patch("nile.services.program_analyzer.chain_service")
     async def test_token_analysis(self, mock_chain, mock_eco, _mock, analyzer):
         mock_chain.get_program_info = AsyncMock(return_value=None)
-        mock_chain.get_token_info = AsyncMock(return_value={
-            "exists": True,
-            "mint_authority_active": True,
-            "freeze_authority_active": False,
-            "supply": 1_000_000_000,
-            "decimals": 9,
-        })
+        mock_chain.get_token_info = AsyncMock(
+            return_value={
+                "exists": True,
+                "mint_authority_active": True,
+                "freeze_authority_active": False,
+                "supply": 1_000_000_000,
+                "decimals": 9,
+            }
+        )
         mock_eco.return_value = {
             "jupiter_strict_list": False,
             "known_program": None,
@@ -79,18 +81,22 @@ class TestAnalyze:
     async def test_program_analysis(
         self, mock_chain, mock_idl_sec, mock_fetch_idl, mock_known, mock_eco, _mock, analyzer
     ):
-        mock_chain.get_program_info = AsyncMock(return_value={
-            "executable": True,
-            "address": "prog1",
-            "owner": "BPFLoaderUpgradeab1e",
-            "lamports": 1000000,
-            "data_len": 500,
-        })
+        mock_chain.get_program_info = AsyncMock(
+            return_value={
+                "executable": True,
+                "address": "prog1",
+                "owner": "BPFLoaderUpgradeab1e",
+                "lamports": 1000000,
+                "data_len": 500,
+            }
+        )
         mock_chain.get_token_info = AsyncMock(return_value=None)
-        mock_chain.get_program_authority = AsyncMock(return_value={
-            "upgradeable": True,
-            "authority": "auth1",
-        })
+        mock_chain.get_program_authority = AsyncMock(
+            return_value={
+                "upgradeable": True,
+                "authority": "auth1",
+            }
+        )
         mock_fetch_idl.return_value = {"version": "0.1.0", "instructions": []}
         mock_idl_sec.return_value = {
             "has_idl": True,
@@ -116,11 +122,13 @@ class TestAnalyze:
 class TestAssessors:
     def test_assess_image(self):
         analyzer = SolanaProgramAnalyzer()
-        result = analyzer._assess_image({
-            "missing_signer_checks": 2,
-            "unsafe_cpi_calls": 1,
-            "unvalidated_accounts": 3,
-        })
+        result = analyzer._assess_image(
+            {
+                "missing_signer_checks": 2,
+                "unsafe_cpi_calls": 1,
+                "unvalidated_accounts": 3,
+            }
+        )
         assert result.missing_signer_checks == 2
         assert result.unsafe_cpi_calls == 1
         assert result.unvalidated_accounts == 3
@@ -210,26 +218,32 @@ class TestTokenPatterns:
 
     def test_token_rug_confidence_both_active(self):
         analyzer = SolanaProgramAnalyzer()
-        conf = analyzer._compute_token_rug_confidence({
-            "mint_authority_active": True,
-            "freeze_authority_active": True,
-        })
+        conf = analyzer._compute_token_rug_confidence(
+            {
+                "mint_authority_active": True,
+                "freeze_authority_active": True,
+            }
+        )
         assert conf >= 0.5
 
     def test_rug_similarity_clean_token(self):
         analyzer = SolanaProgramAnalyzer()
-        score = analyzer._compute_rug_similarity({
-            "mint_authority_active": False,
-            "freeze_authority_active": False,
-        })
+        score = analyzer._compute_rug_similarity(
+            {
+                "mint_authority_active": False,
+                "freeze_authority_active": False,
+            }
+        )
         assert score == 0.0
 
     def test_rug_similarity_suspicious_token(self):
         analyzer = SolanaProgramAnalyzer()
-        score = analyzer._compute_rug_similarity({
-            "mint_authority_active": True,
-            "freeze_authority_active": True,
-            "supply": 100,
-            "decimals": 9,
-        })
+        score = analyzer._compute_rug_similarity(
+            {
+                "mint_authority_active": True,
+                "freeze_authority_active": True,
+                "supply": 100,
+                "decimals": 9,
+            }
+        )
         assert score > 0.5

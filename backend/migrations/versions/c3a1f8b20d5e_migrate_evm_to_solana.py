@@ -11,7 +11,8 @@ Migrate all EVM-specific columns to Solana equivalents:
 - Rename evmbench_* → benchmark_*
 - Update default chain values
 """
-from typing import Sequence, Union
+
+from collections.abc import Sequence
 
 import sqlalchemy as sa
 from alembic import op
@@ -19,8 +20,8 @@ from alembic import op
 # revision identifiers, used by Alembic.
 revision: str = "c3a1f8b20d5e"
 down_revision: str = "be8251cf9f1a"
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
@@ -36,7 +37,9 @@ def upgrade() -> None:
     op.alter_column("soul_tokens", "chain", server_default="solana")
     op.alter_column("soul_tokens", "current_price_eth", new_column_name="current_price_sol")
     op.alter_column("soul_tokens", "reserve_balance_eth", new_column_name="reserve_balance_sol")
-    op.alter_column("soul_tokens", "graduation_threshold_eth", new_column_name="graduation_threshold_sol")
+    op.alter_column(
+        "soul_tokens", "graduation_threshold_eth", new_column_name="graduation_threshold_sol"
+    )
 
     # --- trades table ---
     op.alter_column("trades", "trader_address", type_=sa.String(48))
@@ -97,7 +100,9 @@ def downgrade() -> None:
     op.alter_column("trades", "trader_address", type_=sa.String(42))
 
     # --- soul_tokens table ---
-    op.alter_column("soul_tokens", "graduation_threshold_sol", new_column_name="graduation_threshold_eth")
+    op.alter_column(
+        "soul_tokens", "graduation_threshold_sol", new_column_name="graduation_threshold_eth"
+    )
     op.alter_column("soul_tokens", "reserve_balance_sol", new_column_name="reserve_balance_eth")
     op.alter_column("soul_tokens", "current_price_sol", new_column_name="current_price_eth")
     op.alter_column("soul_tokens", "chain", server_default="base")

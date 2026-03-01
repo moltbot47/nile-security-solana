@@ -47,7 +47,7 @@ async def publish_event(
         )
         db.add(db_event)
         await db.flush()
-        event_data["id"] = db_event.id
+        event_data["id"] = str(db_event.id)
 
     # Publish to Redis
     r = await get_redis()

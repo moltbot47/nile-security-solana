@@ -74,7 +74,7 @@ class SolanaProgramAnalyzer:
         """Analyze an executable Solana program."""
         # Fetch IDL
         idl = await fetch_idl(address)
-        idl_analysis = analyze_idl_security(idl) if idl else analyze_idl_security(None)
+        idl_analysis = analyze_idl_security(idl) if idl else analyze_idl_security({})
 
         # Get upgrade authority info
         authority_info = await chain_service.get_program_authority(address)

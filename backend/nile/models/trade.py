@@ -1,11 +1,17 @@
 """Trade model — records every buy/sell of a soul token."""
 
+from __future__ import annotations
+
 import uuid
+from typing import TYPE_CHECKING
 
 from sqlalchemy import ForeignKey, Integer, Numeric, String, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from nile.models.base import Base, TimestampMixin, UUIDMixin
+
+if TYPE_CHECKING:
+    from nile.models.soul_token import SoulToken
 
 
 class Trade(UUIDMixin, TimestampMixin, Base):
@@ -38,6 +44,4 @@ class Trade(UUIDMixin, TimestampMixin, Base):
     source: Mapped[str] = mapped_column(String(16), default="chain")
 
     # Relationships
-    soul_token: Mapped["SoulToken"] = relationship(  # noqa: F821
-        "SoulToken", back_populates="trades"
-    )
+    soul_token: Mapped[SoulToken] = relationship("SoulToken", back_populates="trades")

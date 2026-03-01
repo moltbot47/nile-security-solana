@@ -62,9 +62,7 @@ class TestListAvailableTasks:
         assert resp.status_code == 200
         assert resp.json() == []
 
-    async def test_lists_queued_tasks(
-        self, client, db_session, agent_and_token, queued_task
-    ):
+    async def test_lists_queued_tasks(self, client, db_session, agent_and_token, queued_task):
         _agent, token = agent_and_token
         resp = await client.get(
             "/api/v1/tasks/available",
@@ -75,9 +73,7 @@ class TestListAvailableTasks:
         assert len(data) >= 1
         assert data[0]["status"] == "queued"
 
-    async def test_filter_by_mode(
-        self, client, db_session, agent_and_token, queued_task
-    ):
+    async def test_filter_by_mode(self, client, db_session, agent_and_token, queued_task):
         _agent, token = agent_and_token
         resp = await client.get(
             "/api/v1/tasks/available?mode=exploit",
@@ -99,9 +95,7 @@ class TestClaimTask:
         assert resp.status_code == 404
 
     @patch("nile.routers.v1.tasks.publish_event", new_callable=AsyncMock)
-    async def test_claim_success(
-        self, _mock_pub, client, db_session, agent_and_token, queued_task
-    ):
+    async def test_claim_success(self, _mock_pub, client, db_session, agent_and_token, queued_task):
         _agent, token = agent_and_token
         _contract, job = queued_task
         resp = await client.post(
@@ -180,9 +174,7 @@ class TestSubmitTask:
         assert data["status"] == "succeeded"
         assert data["points_awarded"] == 50
 
-    async def test_submit_not_running(
-        self, client, db_session, agent_and_token, queued_task
-    ):
+    async def test_submit_not_running(self, client, db_session, agent_and_token, queued_task):
         _agent, token = agent_and_token
         _contract, job = queued_task
         # Try to submit without claiming

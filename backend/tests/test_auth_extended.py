@@ -64,14 +64,12 @@ class TestGetOptionalAgent:
 
     async def test_invalid_bearer_returns_none(self):
         mock_db = AsyncMock()
-        mock_db.execute = AsyncMock(return_value=MagicMock(
-            scalar_one_or_none=MagicMock(return_value=None)
-        ))
+        mock_db.execute = AsyncMock(
+            return_value=MagicMock(scalar_one_or_none=MagicMock(return_value=None))
+        )
         mock_bearer = MagicMock()
         mock_bearer.credentials = "invalid-token"
-        result = await get_optional_agent(
-            db=mock_db, api_key=None, bearer=mock_bearer
-        )
+        result = await get_optional_agent(db=mock_db, api_key=None, bearer=mock_bearer)
         assert result is None
 
     async def test_valid_api_key(self, db_session):
@@ -85,8 +83,6 @@ class TestGetOptionalAgent:
         db_session.add(agent)
         await db_session.flush()
 
-        result = await get_optional_agent(
-            db=db_session, api_key="test-key-123", bearer=None
-        )
+        result = await get_optional_agent(db=db_session, api_key="test-key-123", bearer=None)
         assert result is not None
         assert result.name == agent.name

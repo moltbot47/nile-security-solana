@@ -102,9 +102,7 @@ class TestTradeHistory:
         assert resp.json() == []
 
     async def test_filter_by_address(self, client, db_session):
-        resp = await client.get(
-            "/api/v1/trading/history?trader_address=someaddr"
-        )
+        resp = await client.get("/api/v1/trading/history?trader_address=someaddr")
         assert resp.status_code == 200
 
 
@@ -123,9 +121,7 @@ class TestExecuteBuy:
         assert resp.status_code == 401
 
     @patch("nile.routers.v1.trading.run_risk_checks", new_callable=AsyncMock)
-    async def test_buy_success(
-        self, mock_risk, client, db_session, trading_setup
-    ):
+    async def test_buy_success(self, mock_risk, client, db_session, trading_setup):
         mock_risk.return_value = []
         person, token, agent, jwt_token = trading_setup
         resp = await client.post(
@@ -160,9 +156,7 @@ class TestExecuteBuy:
 @pytest.mark.asyncio
 class TestExecuteSell:
     @patch("nile.routers.v1.trading.run_risk_checks", new_callable=AsyncMock)
-    async def test_sell_success(
-        self, mock_risk, client, db_session, trading_setup
-    ):
+    async def test_sell_success(self, mock_risk, client, db_session, trading_setup):
         mock_risk.return_value = []
         person, _, _, jwt_token = trading_setup
         resp = await client.post(
@@ -197,8 +191,6 @@ class TestExecuteSell:
 @pytest.mark.asyncio
 class TestPortfolio:
     async def test_empty_portfolio(self, client, db_session):
-        resp = await client.get(
-            "/api/v1/trading/portfolio?wallet_address=test123"
-        )
+        resp = await client.get("/api/v1/trading/portfolio?wallet_address=test123")
         assert resp.status_code == 200
         assert resp.json() == []

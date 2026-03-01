@@ -26,9 +26,7 @@ class TestFetchIdl:
         mock_client.get_account_info = AsyncMock(return_value=mock_resp)
         mock_chain.async_client = mock_client
 
-        result = await fetch_idl(
-            "11111111111111111111111111111111"
-        )
+        result = await fetch_idl("11111111111111111111111111111111")
         assert result is None
 
     @patch(
@@ -40,7 +38,5 @@ class TestFetchIdl:
         """When solders not installed, returns None gracefully."""
         with patch.dict("sys.modules", {"solders.pubkey": None}):
             # _fetch_onchain_idl will fail on import
-            result = await fetch_idl(
-                "11111111111111111111111111111111"
-            )
+            result = await fetch_idl("11111111111111111111111111111111")
             assert result is None

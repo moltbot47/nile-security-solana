@@ -46,18 +46,14 @@ class TestListSoulTokens:
         assert resp.status_code == 200
         assert resp.json() == []
 
-    async def test_list_with_token(
-        self, client, db_session, person_with_token
-    ):
+    async def test_list_with_token(self, client, db_session, person_with_token):
         resp = await client.get("/api/v1/soul-tokens")
         assert resp.status_code == 200
         data = resp.json()
         assert len(data) >= 1
         assert data[0]["symbol"] == "STT"
 
-    async def test_sort_by_volume(
-        self, client, db_session, person_with_token
-    ):
+    async def test_sort_by_volume(self, client, db_session, person_with_token):
         resp = await client.get("/api/v1/soul-tokens?sort=volume")
         assert resp.status_code == 200
 
@@ -65,15 +61,11 @@ class TestListSoulTokens:
         resp = await client.get("/api/v1/soul-tokens?sort=new")
         assert resp.status_code == 200
 
-    async def test_sort_by_price(
-        self, client, db_session, person_with_token
-    ):
+    async def test_sort_by_price(self, client, db_session, person_with_token):
         resp = await client.get("/api/v1/soul-tokens?sort=price")
         assert resp.status_code == 200
 
-    async def test_filter_by_phase(
-        self, client, db_session, person_with_token
-    ):
+    async def test_filter_by_phase(self, client, db_session, person_with_token):
         resp = await client.get("/api/v1/soul-tokens?phase=bonding")
         assert resp.status_code == 200
         data = resp.json()
@@ -88,9 +80,7 @@ class TestMarketOverview:
         data = resp.json()
         assert data["total_tokens"] == 0
 
-    async def test_market_with_token(
-        self, client, db_session, person_with_token
-    ):
+    async def test_market_with_token(self, client, db_session, person_with_token):
         resp = await client.get("/api/v1/soul-tokens/market-overview")
         assert resp.status_code == 200
         data = resp.json()
@@ -127,7 +117,6 @@ class TestCircuitBreakers:
         resp = await client.get("/api/v1/soul-tokens/risk/circuit-breakers")
         assert resp.status_code == 200
         assert "active_breakers" in resp.json()
-
 
 
 @pytest.mark.asyncio

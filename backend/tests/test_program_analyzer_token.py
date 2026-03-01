@@ -87,8 +87,11 @@ class TestAnalyzeToken:
         """When address is executable, takes the program path."""
         mock_chain.get_program_info = AsyncMock(
             return_value={
-                "address": "Test", "executable": True,
-                "owner": "BPF", "lamports": 100, "data_len": 50,
+                "address": "Test",
+                "executable": True,
+                "owner": "BPF",
+                "lamports": 100,
+                "data_len": 50,
             }
         )
         mock_chain.get_token_info = AsyncMock(return_value=None)

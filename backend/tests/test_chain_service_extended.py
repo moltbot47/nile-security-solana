@@ -72,14 +72,18 @@ class TestAssessProgramSecurity:
 
     async def test_existing_program(self):
         svc = SolanaChainService()
-        svc.get_program_info = AsyncMock(return_value={
-            "executable": True,
-            "data_len": 1000,
-        })
-        svc.get_program_authority = AsyncMock(return_value={
-            "upgradeable": True,
-            "authority": "auth123",
-        })
+        svc.get_program_info = AsyncMock(
+            return_value={
+                "executable": True,
+                "data_len": 1000,
+            }
+        )
+        svc.get_program_authority = AsyncMock(
+            return_value={
+                "upgradeable": True,
+                "authority": "auth123",
+            }
+        )
         result = await svc.assess_program_security("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
         assert result["exists"] is True
         assert result["executable"] is True
@@ -96,14 +100,16 @@ class TestAssessTokenSecurity:
 
     async def test_existing_token(self):
         svc = SolanaChainService()
-        svc.get_token_info = AsyncMock(return_value={
-            "mint_authority_active": True,
-            "mint_authority": "auth1",
-            "freeze_authority_active": False,
-            "freeze_authority": None,
-            "supply": 1000000,
-            "decimals": 9,
-        })
+        svc.get_token_info = AsyncMock(
+            return_value={
+                "mint_authority_active": True,
+                "mint_authority": "auth1",
+                "freeze_authority_active": False,
+                "freeze_authority": None,
+                "supply": 1000000,
+                "decimals": 9,
+            }
+        )
         result = await svc.assess_token_security("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
         assert result["exists"] is True
         assert result["mint_authority_active"] is True

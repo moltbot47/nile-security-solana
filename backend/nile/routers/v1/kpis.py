@@ -42,7 +42,7 @@ async def attacker_kpis(time_range: str = "30d", db: AsyncSession = Depends(get_
         .group_by(Vulnerability.category)
         .order_by(func.count().desc())
     )
-    categories = dict(cat_result.all())
+    categories: dict[str, int] = dict(cat_result.all())  # type: ignore[arg-type]
     cat_total = sum(categories.values()) or 1
     distribution = {k: round(v / cat_total, 3) for k, v in categories.items()}
 

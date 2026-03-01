@@ -1,11 +1,17 @@
 """Portfolio model — tracks user token holdings and P&L."""
 
+from __future__ import annotations
+
 import uuid
+from typing import TYPE_CHECKING
 
 from sqlalchemy import ForeignKey, Numeric, String, UniqueConstraint, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from nile.models.base import Base, TimestampMixin, UUIDMixin
+
+if TYPE_CHECKING:
+    from nile.models.soul_token import SoulToken
 
 
 class Portfolio(UUIDMixin, TimestampMixin, Base):
@@ -27,4 +33,4 @@ class Portfolio(UUIDMixin, TimestampMixin, Base):
         ),
     )
 
-    soul_token: Mapped["SoulToken"] = relationship("SoulToken")  # noqa: F821
+    soul_token: Mapped[SoulToken] = relationship("SoulToken")

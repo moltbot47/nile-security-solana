@@ -227,23 +227,28 @@ class TestTaskClaimedByOther:
     async def test_submit_different_agent(self, client, db_session):
         """Submitting task claimed by another agent → 403."""
         contract = Contract(
-            name="Task Test", address="TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+            name="Task Test",
+            address="TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
             chain="solana",
         )
         db_session.add(contract)
         await db_session.flush()
 
         job = ScanJob(
-            contract_id=contract.id, status="running",
-            mode="detect", agent="other-agent-name",
+            contract_id=contract.id,
+            status="running",
+            mode="detect",
+            agent="other-agent-name",
         )
         db_session.add(job)
         await db_session.flush()
 
         agent = Agent(
             name=f"submitter-{uuid.uuid4().hex[:6]}",
-            owner_id="test", capabilities=["detect"],
-            status="active", api_key_hash="unused",
+            owner_id="test",
+            capabilities=["detect"],
+            status="active",
+            api_key_hash="unused",
         )
         db_session.add(agent)
         await db_session.flush()
@@ -269,18 +274,26 @@ class TestAgentScorerLowEssence:
 
         agent = Agent(
             name=f"low-ess-{uuid.uuid4().hex[:6]}",
-            owner_id="test", capabilities=["detect"],
-            status="active", api_key_hash="unused",
-            total_points=5, total_contributions=1,
+            owner_id="test",
+            capabilities=["detect"],
+            status="active",
+            api_key_hash="unused",
+            total_points=5,
+            total_contributions=1,
         )
         db_session.add(agent)
         await db_session.flush()
 
         # Add 1 contribution so total_contribs = 1, avg = 5/1 = 5
-        db_session.add(AgentContribution(
-            agent_id=agent.id, contribution_type="detection",
-            severity_found="low", points_awarded=5, verified=True,
-        ))
+        db_session.add(
+            AgentContribution(
+                agent_id=agent.id,
+                contribution_type="detection",
+                severity_found="low",
+                points_awarded=5,
+                verified=True,
+            )
+        )
         await db_session.flush()
 
         result = await compute_agent_nile_score(db_session, agent.id)
@@ -310,9 +323,11 @@ class TestGetProgramInfoNotFound:
     async def test_program_not_found(self):
         mods = {
             "solders": MagicMock(),
-            "solders.pubkey": MagicMock(Pubkey=MagicMock(
-                from_string=MagicMock(return_value=MagicMock()),
-            )),
+            "solders.pubkey": MagicMock(
+                Pubkey=MagicMock(
+                    from_string=MagicMock(return_value=MagicMock()),
+                )
+            ),
             "solders.rpc": MagicMock(),
             "solders.rpc.api": MagicMock(),
             "solders.rpc.async_api": MagicMock(AsyncClient=MagicMock()),
@@ -327,9 +342,7 @@ class TestGetProgramInfoNotFound:
             mock_client.get_account_info = AsyncMock(return_value=mock_resp)
             svc._async_client = mock_client
 
-            result = await svc.get_program_info(
-                "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-            )
+            result = await svc.get_program_info("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
             assert result is None
 
 
@@ -342,14 +355,14 @@ class TestIdlFetcherDataTooShort:
         """IDL data present but too short to read the length prefix."""
         mods = {
             "solders": MagicMock(),
-            "solders.pubkey": MagicMock(Pubkey=MagicMock(
-                from_string=MagicMock(
-                    side_effect=lambda s: MagicMock(__bytes__=lambda _: b"\x00" * 32)
-                ),
-                find_program_address=MagicMock(
-                    return_value=(MagicMock(), 255)
-                ),
-            )),
+            "solders.pubkey": MagicMock(
+                Pubkey=MagicMock(
+                    from_string=MagicMock(
+                        side_effect=lambda s: MagicMock(__bytes__=lambda _: b"\x00" * 32)
+                    ),
+                    find_program_address=MagicMock(return_value=(MagicMock(), 255)),
+                )
+            ),
             "solders.rpc": MagicMock(),
             "solders.rpc.api": MagicMock(),
             "solders.rpc.async_api": MagicMock(AsyncClient=MagicMock()),
@@ -409,10 +422,16 @@ class TestRiskEngineBranches:
         await db_session.flush()
 
         token = SoulToken(
-            person_id=person.id, name="Branch Token", symbol="BRC",
-            phase="bonding", chain="solana", current_price_sol=0.01,
-            current_price_usd=2.50, market_cap_usd=25000.0,
-            total_supply=10000000, reserve_balance_sol=5.0,
+            person_id=person.id,
+            name="Branch Token",
+            symbol="BRC",
+            phase="bonding",
+            chain="solana",
+            current_price_sol=0.01,
+            current_price_usd=2.50,
+            market_cap_usd=25000.0,
+            total_supply=10000000,
+            reserve_balance_sol=5.0,
             graduation_threshold_sol=100.0,
         )
         db_session.add(token)
@@ -426,22 +445,46 @@ class TestRiskEngineBranches:
         token = risk_token
         addr = "LR" * 22
         # Buy 1000, sell only 100 → ratio = 100/1000 = 0.1
-        db_session.add(Trade(
-            soul_token_id=token.id, side="buy", token_amount=1000,
-            sol_amount=10, price_sol=0.01, price_usd=2.50, fee_total_sol=0.1,
-            fee_creator_sol=0.05, fee_protocol_sol=0.03, fee_staker_sol=0.02,
-            trader_address=addr, phase="bonding", source="api",
-        ))
-        db_session.add(Trade(
-            soul_token_id=token.id, side="sell", token_amount=100,
-            sol_amount=1, price_sol=0.01, price_usd=2.50, fee_total_sol=0.01,
-            fee_creator_sol=0.005, fee_protocol_sol=0.003, fee_staker_sol=0.002,
-            trader_address=addr, phase="bonding", source="api",
-        ))
+        db_session.add(
+            Trade(
+                soul_token_id=token.id,
+                side="buy",
+                token_amount=1000,
+                sol_amount=10,
+                price_sol=0.01,
+                price_usd=2.50,
+                fee_total_sol=0.1,
+                fee_creator_sol=0.05,
+                fee_protocol_sol=0.03,
+                fee_staker_sol=0.02,
+                trader_address=addr,
+                phase="bonding",
+                source="api",
+            )
+        )
+        db_session.add(
+            Trade(
+                soul_token_id=token.id,
+                side="sell",
+                token_amount=100,
+                sol_amount=1,
+                price_sol=0.01,
+                price_usd=2.50,
+                fee_total_sol=0.01,
+                fee_creator_sol=0.005,
+                fee_protocol_sol=0.003,
+                fee_staker_sol=0.002,
+                trader_address=addr,
+                phase="bonding",
+                source="api",
+            )
+        )
         await db_session.flush()
 
         result = await check_wash_trading(
-            db_session, soul_token_id=token.id, trader_address=addr,
+            db_session,
+            soul_token_id=token.id,
+            trader_address=addr,
         )
         assert result is None
 
@@ -452,17 +495,28 @@ class TestRiskEngineBranches:
         token = risk_token
         # 3 sell trades with rising prices
         for price in [0.01, 0.012, 0.02]:
-            db_session.add(Trade(
-                soul_token_id=token.id, side="sell", token_amount=100,
-                sol_amount=1, price_sol=price, price_usd=price * 250,
-                fee_total_sol=0.01, fee_creator_sol=0.005, fee_protocol_sol=0.003,
-                fee_staker_sol=0.002, trader_address="OS" * 22,
-                phase="bonding", source="api",
-            ))
+            db_session.add(
+                Trade(
+                    soul_token_id=token.id,
+                    side="sell",
+                    token_amount=100,
+                    sol_amount=1,
+                    price_sol=price,
+                    price_usd=price * 250,
+                    fee_total_sol=0.01,
+                    fee_creator_sol=0.005,
+                    fee_protocol_sol=0.003,
+                    fee_staker_sol=0.002,
+                    trader_address="OS" * 22,
+                    phase="bonding",
+                    source="api",
+                )
+            )
         await db_session.flush()
 
         result = await check_pump_and_dump(
-            db_session, soul_token_id=token.id,
+            db_session,
+            soul_token_id=token.id,
         )
         assert result is None
 
@@ -475,17 +529,28 @@ class TestRiskEngineBranches:
         wallets = [f"{chr(65 + i)}" * 44 for i in range(10)]
         prices = [0.01, 0.011, 0.012, 0.013, 0.014, 0.015, 0.016, 0.017, 0.018, 0.02]
         for wallet, price in zip(wallets, prices, strict=True):
-            db_session.add(Trade(
-                soul_token_id=token.id, side="buy", token_amount=100,
-                sol_amount=1, price_sol=price, price_usd=price * 250,
-                fee_total_sol=0.01, fee_creator_sol=0.005, fee_protocol_sol=0.003,
-                fee_staker_sol=0.002, trader_address=wallet,
-                phase="bonding", source="api",
-            ))
+            db_session.add(
+                Trade(
+                    soul_token_id=token.id,
+                    side="buy",
+                    token_amount=100,
+                    sol_amount=1,
+                    price_sol=price,
+                    price_usd=price * 250,
+                    fee_total_sol=0.01,
+                    fee_creator_sol=0.005,
+                    fee_protocol_sol=0.003,
+                    fee_staker_sol=0.002,
+                    trader_address=wallet,
+                    phase="bonding",
+                    source="api",
+                )
+            )
         await db_session.flush()
 
         result = await check_pump_and_dump(
-            db_session, soul_token_id=token.id,
+            db_session,
+            soul_token_id=token.id,
         )
         # 10 unique wallets, top 3 = 30% < 70% threshold
         assert result is None
@@ -495,45 +560,79 @@ class TestRiskEngineBranches:
         from nile.services.risk_engine import check_cliff_event
 
         token = risk_token
-        db_session.add(Trade(
-            soul_token_id=token.id, side="sell", token_amount=100,
-            sol_amount=1, price_sol=0.01, price_usd=2.50, fee_total_sol=0.01,
-            fee_creator_sol=0.005, fee_protocol_sol=0.003, fee_staker_sol=0.002,
-            trader_address="ST" * 22, phase="bonding", source="api",
-        ))
+        db_session.add(
+            Trade(
+                soul_token_id=token.id,
+                side="sell",
+                token_amount=100,
+                sol_amount=1,
+                price_sol=0.01,
+                price_usd=2.50,
+                fee_total_sol=0.01,
+                fee_creator_sol=0.005,
+                fee_protocol_sol=0.003,
+                fee_staker_sol=0.002,
+                trader_address="ST" * 22,
+                phase="bonding",
+                source="api",
+            )
+        )
         await db_session.flush()
 
         result = await check_cliff_event(
-            db_session, soul_token_id=token.id,
+            db_session,
+            soul_token_id=token.id,
         )
         assert result is None
 
     @patch("nile.services.risk_engine.risk_to_circuit_breaker", new_callable=AsyncMock)
-    async def test_run_risk_checks_wash_appended(
-        self, mock_cb, db_session, risk_token
-    ):
+    async def test_run_risk_checks_wash_appended(self, mock_cb, db_session, risk_token):
         """run_risk_checks appends wash alert (line 259)."""
         from nile.services.risk_engine import run_risk_checks
 
         token = risk_token
         addr = "WA" * 22
         # Create wash trading pattern
-        db_session.add(Trade(
-            soul_token_id=token.id, side="buy", token_amount=1000,
-            sol_amount=10, price_sol=0.01, price_usd=2.50, fee_total_sol=0.1,
-            fee_creator_sol=0.05, fee_protocol_sol=0.03, fee_staker_sol=0.02,
-            trader_address=addr, phase="bonding", source="api",
-        ))
-        db_session.add(Trade(
-            soul_token_id=token.id, side="sell", token_amount=950,
-            sol_amount=9.5, price_sol=0.01, price_usd=2.50, fee_total_sol=0.095,
-            fee_creator_sol=0.0475, fee_protocol_sol=0.0285, fee_staker_sol=0.019,
-            trader_address=addr, phase="bonding", source="api",
-        ))
+        db_session.add(
+            Trade(
+                soul_token_id=token.id,
+                side="buy",
+                token_amount=1000,
+                sol_amount=10,
+                price_sol=0.01,
+                price_usd=2.50,
+                fee_total_sol=0.1,
+                fee_creator_sol=0.05,
+                fee_protocol_sol=0.03,
+                fee_staker_sol=0.02,
+                trader_address=addr,
+                phase="bonding",
+                source="api",
+            )
+        )
+        db_session.add(
+            Trade(
+                soul_token_id=token.id,
+                side="sell",
+                token_amount=950,
+                sol_amount=9.5,
+                price_sol=0.01,
+                price_usd=2.50,
+                fee_total_sol=0.095,
+                fee_creator_sol=0.0475,
+                fee_protocol_sol=0.0285,
+                fee_staker_sol=0.019,
+                trader_address=addr,
+                phase="bonding",
+                source="api",
+            )
+        )
         await db_session.flush()
 
         alerts = await run_risk_checks(
-            db_session, soul_token_id=token.id, trader_address=addr,
+            db_session,
+            soul_token_id=token.id,
+            trader_address=addr,
         )
         wash_alerts = [a for a in alerts if a.get("risk_type") == "wash_trading"]
         assert len(wash_alerts) >= 1
@@ -549,8 +648,10 @@ class TestSoulAgentCapabilityFilter:
 
         agent = Agent(
             name=f"cap-agent-{uuid.uuid4().hex[:6]}",
-            owner_id="test", capabilities=["detect", "report"],
-            status="active", api_key_hash="unused",
+            owner_id="test",
+            capabilities=["detect", "report"],
+            status="active",
+            api_key_hash="unused",
             total_points=100,
         )
         db_session.add(agent)

@@ -26,29 +26,21 @@ class TestNameScore:
         assert details["verification"] == 0
 
     def test_verified_level(self):
-        score, _ = compute_person_name_score(
-            PersonNameInputs(verification_level="verified")
-        )
+        score, _ = compute_person_name_score(PersonNameInputs(verification_level="verified"))
         assert score >= 20.0
 
     def test_premium_level(self):
-        score, _ = compute_person_name_score(
-            PersonNameInputs(verification_level="premium")
-        )
+        score, _ = compute_person_name_score(PersonNameInputs(verification_level="premium"))
         assert score >= 30.0
 
     def test_kyc_bonus(self):
         without_kyc, _ = compute_person_name_score(PersonNameInputs())
-        with_kyc, details = compute_person_name_score(
-            PersonNameInputs(kyc_completed=True)
-        )
+        with_kyc, details = compute_person_name_score(PersonNameInputs(kyc_completed=True))
         assert details["kyc_bonus"] == 10.0
         assert with_kyc - without_kyc == 10.0
 
     def test_social_accounts_capped(self):
-        _, details = compute_person_name_score(
-            PersonNameInputs(social_account_count=100)
-        )
+        _, details = compute_person_name_score(PersonNameInputs(social_account_count=100))
         assert details["social_presence"] == 15.0
 
     def test_follower_log_scale(self):
@@ -57,15 +49,11 @@ class TestNameScore:
         assert s2 > s1
 
     def test_follower_capped_at_25(self):
-        _, details = compute_person_name_score(
-            PersonNameInputs(follower_count=10**12)
-        )
+        _, details = compute_person_name_score(PersonNameInputs(follower_count=10**12))
         assert details["follower_reach"] <= 25.0
 
     def test_domain_authority_capped(self):
-        _, details = compute_person_name_score(
-            PersonNameInputs(domain_authority=50.0)
-        )
+        _, details = compute_person_name_score(PersonNameInputs(domain_authority=50.0))
         assert details["domain_authority"] == 20.0
 
     def test_max_score_is_100(self):
@@ -90,15 +78,11 @@ class TestImageScore:
         assert score == pytest.approx(37.5, abs=0.1)
 
     def test_perfect_sentiment(self):
-        score, _ = compute_person_image_score(
-            PersonImageInputs(avg_sentiment=1.0)
-        )
+        score, _ = compute_person_image_score(PersonImageInputs(avg_sentiment=1.0))
         assert score >= 50.0
 
     def test_negative_sentiment(self):
-        score, _ = compute_person_image_score(
-            PersonImageInputs(avg_sentiment=0.0)
-        )
+        score, _ = compute_person_image_score(PersonImageInputs(avg_sentiment=0.0))
         assert score < 25.0
 
     def test_positive_events_boost(self):
@@ -108,15 +92,11 @@ class TestImageScore:
         assert details["event_impact"] == 25.0
 
     def test_media_mentions_capped(self):
-        _, details = compute_person_image_score(
-            PersonImageInputs(media_mention_count=100)
-        )
+        _, details = compute_person_image_score(PersonImageInputs(media_mention_count=100))
         assert details["media_coverage"] == 15.0
 
     def test_engagement_capped(self):
-        _, details = compute_person_image_score(
-            PersonImageInputs(engagement_rate=200)
-        )
+        _, details = compute_person_image_score(PersonImageInputs(engagement_rate=200))
         assert details["engagement"] == 10.0
 
 
@@ -159,27 +139,19 @@ class TestEssenceScore:
         assert score == pytest.approx(10.0, abs=0.1)
 
     def test_career_years_capped(self):
-        _, details = compute_person_essence_score(
-            PersonEssenceInputs(career_years=20)
-        )
+        _, details = compute_person_essence_score(PersonEssenceInputs(career_years=20))
         assert details["career_maturity"] == 20.0
 
     def test_rising_trajectory(self):
-        _, details = compute_person_essence_score(
-            PersonEssenceInputs(trajectory_slope=1.0)
-        )
+        _, details = compute_person_essence_score(PersonEssenceInputs(trajectory_slope=1.0))
         assert details["trajectory"] == 20.0
 
     def test_declining_trajectory(self):
-        _, details = compute_person_essence_score(
-            PersonEssenceInputs(trajectory_slope=-1.0)
-        )
+        _, details = compute_person_essence_score(PersonEssenceInputs(trajectory_slope=-1.0))
         assert details["trajectory"] == 0.0
 
     def test_earning_potential_log(self):
-        _, d1 = compute_person_essence_score(
-            PersonEssenceInputs(annual_earning_estimate=100_000)
-        )
+        _, d1 = compute_person_essence_score(PersonEssenceInputs(annual_earning_estimate=100_000))
         _, d2 = compute_person_essence_score(
             PersonEssenceInputs(annual_earning_estimate=10_000_000)
         )

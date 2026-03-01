@@ -79,9 +79,7 @@ class TestSendAlert:
         ):
             mock_settings.discord_alert_webhook = "https://discord.com/api/webhooks/test"
             mock_settings.solana_network = "devnet"
-            result = await send_alert(
-                "Test", "Message", fields={"key": "value"}
-            )
+            result = await send_alert("Test", "Message", fields={"key": "value"})
             assert result is True
 
 

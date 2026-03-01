@@ -55,9 +55,7 @@ class TestScanSolanaProgram:
     @patch("nile.routers.v1.scans.program_analyzer")
     @patch("nile.routers.v1.scans.validate_solana_address", return_value=True)
     async def test_analysis_error(self, mock_validate, mock_analyzer, client):
-        mock_analyzer.analyze = AsyncMock(
-            return_value={"error": "Cannot reach RPC node"}
-        )
+        mock_analyzer.analyze = AsyncMock(return_value={"error": "Cannot reach RPC node"})
 
         resp = await client.post(
             "/api/v1/scans/solana",

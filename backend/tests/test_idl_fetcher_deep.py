@@ -11,12 +11,8 @@ import pytest
 def _make_solders_mocks():
     """Create solders module mocks."""
     mock_pk_cls = MagicMock()
-    mock_pk_cls.from_string = MagicMock(
-        return_value=MagicMock(__bytes__=lambda _: b"\x00" * 32)
-    )
-    mock_pk_cls.find_program_address = MagicMock(
-        return_value=(MagicMock(), 255)
-    )
+    mock_pk_cls.from_string = MagicMock(return_value=MagicMock(__bytes__=lambda _: b"\x00" * 32))
+    mock_pk_cls.find_program_address = MagicMock(return_value=(MagicMock(), 255))
     mock_mod = MagicMock()
     mock_mod.Pubkey = mock_pk_cls
     return {
@@ -41,9 +37,7 @@ class TestFetchOnchainIdl:
             mock_resp.value = None
             mock_client.get_account_info = AsyncMock(return_value=mock_resp)
 
-            with patch.object(
-                fetcher_mod.chain_service, "_async_client", mock_client
-            ):
+            with patch.object(fetcher_mod.chain_service, "_async_client", mock_client):
                 result = await fetcher_mod._fetch_onchain_idl(
                     "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
                 )
@@ -64,9 +58,7 @@ class TestFetchOnchainIdl:
             mock_resp.value.data = b"\x00" * 20  # < 44 bytes
             mock_client.get_account_info = AsyncMock(return_value=mock_resp)
 
-            with patch.object(
-                fetcher_mod.chain_service, "_async_client", mock_client
-            ):
+            with patch.object(fetcher_mod.chain_service, "_async_client", mock_client):
                 result = await fetcher_mod._fetch_onchain_idl(
                     "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
                 )
@@ -95,9 +87,7 @@ class TestFetchOnchainIdl:
             mock_resp.value.data = full_data
             mock_client.get_account_info = AsyncMock(return_value=mock_resp)
 
-            with patch.object(
-                fetcher_mod.chain_service, "_async_client", mock_client
-            ):
+            with patch.object(fetcher_mod.chain_service, "_async_client", mock_client):
                 result = await fetcher_mod._fetch_onchain_idl(
                     "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
                 )
@@ -126,9 +116,7 @@ class TestFetchOnchainIdl:
             mock_resp.value.data = full_data
             mock_client.get_account_info = AsyncMock(return_value=mock_resp)
 
-            with patch.object(
-                fetcher_mod.chain_service, "_async_client", mock_client
-            ):
+            with patch.object(fetcher_mod.chain_service, "_async_client", mock_client):
                 result = await fetcher_mod._fetch_onchain_idl(
                     "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
                 )
@@ -170,9 +158,7 @@ class TestFetchOnchainIdl:
             mock_resp.value.data = full_data
             mock_client.get_account_info = AsyncMock(return_value=mock_resp)
 
-            with patch.object(
-                fetcher_mod.chain_service, "_async_client", mock_client
-            ):
+            with patch.object(fetcher_mod.chain_service, "_async_client", mock_client):
                 result = await fetcher_mod._fetch_onchain_idl(
                     "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
                 )
@@ -191,7 +177,5 @@ class TestFetchOnchainIdl:
             idl_data = {"instructions": [], "version": "0.2.0"}
             fetcher_mod._fetch_onchain_idl = AsyncMock(return_value=idl_data)
 
-            result = await fetcher_mod.fetch_idl(
-                "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-            )
+            result = await fetcher_mod.fetch_idl("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
             assert result == idl_data

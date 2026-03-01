@@ -31,17 +31,11 @@ class TestEventHistory:
         assert data[0]["event_type"] == "scan.completed"
 
     async def test_filter_by_type(self, client, db_session):
-        db_session.add(
-            EcosystemEvent(event_type="scan.completed", actor_id=uuid.uuid4())
-        )
-        db_session.add(
-            EcosystemEvent(event_type="task.claimed", actor_id=uuid.uuid4())
-        )
+        db_session.add(EcosystemEvent(event_type="scan.completed", actor_id=uuid.uuid4()))
+        db_session.add(EcosystemEvent(event_type="task.claimed", actor_id=uuid.uuid4()))
         await db_session.flush()
 
-        resp = await client.get(
-            "/api/v1/events/history?event_type=scan.completed"
-        )
+        resp = await client.get("/api/v1/events/history?event_type=scan.completed")
         assert resp.status_code == 200
         data = resp.json()
         assert all(e["event_type"] == "scan.completed" for e in data)

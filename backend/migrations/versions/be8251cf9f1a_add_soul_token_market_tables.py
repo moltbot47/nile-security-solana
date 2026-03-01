@@ -5,7 +5,8 @@ Revises: 0765810ab271
 Create Date: 2026-02-19 06:12:17.813450
 
 """
-from typing import Sequence, Union
+
+from collections.abc import Sequence
 
 import sqlalchemy as sa
 from alembic import op
@@ -13,9 +14,9 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision: str = "be8251cf9f1a"
-down_revision: Union[str, Sequence[str], None] = "0765810ab271"
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | Sequence[str] | None = "0765810ab271"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
@@ -78,9 +79,7 @@ def upgrade() -> None:
     op.create_table(
         "trades",
         sa.Column("id", sa.UUID(), primary_key=True),
-        sa.Column(
-            "soul_token_id", sa.UUID(), sa.ForeignKey("soul_tokens.id"), index=True
-        ),
+        sa.Column("soul_token_id", sa.UUID(), sa.ForeignKey("soul_tokens.id"), index=True),
         sa.Column("side", sa.String(4), nullable=False),
         sa.Column("token_amount", sa.Numeric(28, 18), nullable=False),
         sa.Column("eth_amount", sa.Numeric(20, 10), nullable=False),
@@ -103,9 +102,7 @@ def upgrade() -> None:
     op.create_table(
         "price_candles",
         sa.Column("id", sa.BigInteger(), primary_key=True, autoincrement=True),
-        sa.Column(
-            "soul_token_id", sa.UUID(), sa.ForeignKey("soul_tokens.id"), index=True
-        ),
+        sa.Column("soul_token_id", sa.UUID(), sa.ForeignKey("soul_tokens.id"), index=True),
         sa.Column("interval", sa.String(4), nullable=False, index=True),
         sa.Column("open_time", sa.DateTime(timezone=True), nullable=False, index=True),
         sa.Column("close_time", sa.DateTime(timezone=True), nullable=False),
@@ -117,7 +114,9 @@ def upgrade() -> None:
         sa.Column("volume_usd", sa.Numeric(16, 2), server_default="0"),
         sa.Column("trade_count", sa.Integer(), server_default="0"),
         sa.UniqueConstraint(
-            "soul_token_id", "interval", "open_time",
+            "soul_token_id",
+            "interval",
+            "open_time",
             name="uq_candle_token_interval_time",
         ),
     )
@@ -158,7 +157,9 @@ def upgrade() -> None:
         sa.Column("trigger_type", sa.String(32)),
         sa.Column("trigger_id", sa.UUID()),
         sa.Column("score_details", postgresql.JSONB(), server_default="{}"),
-        sa.Column("computed_at", sa.DateTime(timezone=True), server_default=sa.func.now(), index=True),
+        sa.Column(
+            "computed_at", sa.DateTime(timezone=True), server_default=sa.func.now(), index=True
+        ),
     )
 
     # 7. portfolios
@@ -166,9 +167,7 @@ def upgrade() -> None:
         "portfolios",
         sa.Column("id", sa.UUID(), primary_key=True),
         sa.Column("wallet_address", sa.String(42), nullable=False, index=True),
-        sa.Column(
-            "soul_token_id", sa.UUID(), sa.ForeignKey("soul_tokens.id"), index=True
-        ),
+        sa.Column("soul_token_id", sa.UUID(), sa.ForeignKey("soul_tokens.id"), index=True),
         sa.Column("balance", sa.Numeric(28, 18), server_default="0"),
         sa.Column("avg_buy_price_eth", sa.Numeric(20, 10), server_default="0"),
         sa.Column("total_invested_eth", sa.Numeric(20, 10), server_default="0"),
@@ -176,7 +175,8 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now()),
         sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now()),
         sa.UniqueConstraint(
-            "wallet_address", "soul_token_id",
+            "wallet_address",
+            "soul_token_id",
             name="uq_portfolio_wallet_token",
         ),
     )

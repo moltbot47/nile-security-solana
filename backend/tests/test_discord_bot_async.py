@@ -32,7 +32,8 @@ def bot():
         with (
             patch.object(type(b), "user", new_callable=lambda: property(lambda self: mock_user)),
             patch.object(
-                type(b), "guilds",
+                type(b),
+                "guilds",
                 new_callable=lambda: property(lambda self: self._guilds),
             ),
         ):
@@ -144,9 +145,7 @@ class TestOnReady:
 
         mock_feed = AsyncMock()
         # Raise discord.Forbidden to test the exception handler
-        mock_feed.send.side_effect = discord.Forbidden(
-            MagicMock(), "Missing Send Messages"
-        )
+        mock_feed.send.side_effect = discord.Forbidden(MagicMock(), "Missing Send Messages")
         bot._channels = {"nile-feed": mock_feed}
 
         with patch("nile.discord.bot.asyncio") as mock_asyncio:

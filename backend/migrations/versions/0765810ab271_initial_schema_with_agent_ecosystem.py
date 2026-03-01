@@ -92,9 +92,7 @@ def upgrade() -> None:
             nullable=False,
             index=True,
         ),
-        sa.Column(
-            "scan_job_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("scan_jobs.id")
-        ),
+        sa.Column("scan_job_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("scan_jobs.id")),
         sa.Column("title", sa.Text, nullable=False),
         sa.Column("severity", sa.String(16), nullable=False, index=True),
         sa.Column("category", sa.String(64), nullable=False, index=True),
@@ -212,9 +210,7 @@ def upgrade() -> None:
             nullable=False,
             index=True,
         ),
-        sa.Column(
-            "recipient_agent_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("agents.id")
-        ),
+        sa.Column("recipient_agent_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("agents.id")),
         sa.Column("channel", sa.String(32), nullable=False, index=True),
         sa.Column("message_type", sa.String(16), nullable=False),
         sa.Column("payload", postgresql.JSONB, server_default="{}"),

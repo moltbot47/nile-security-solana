@@ -1,12 +1,20 @@
 """SoulToken model — SPL token representing a person's tradeable NIL value."""
 
+from __future__ import annotations
+
 import uuid
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import JSON, DateTime, ForeignKey, Integer, Numeric, String, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from nile.models.base import Base, TimestampMixin, UUIDMixin
+
+if TYPE_CHECKING:
+    from nile.models.person import Person
+    from nile.models.price_candle import PriceCandle
+    from nile.models.trade import Trade
 
 
 class SoulToken(UUIDMixin, TimestampMixin, Base):
@@ -57,12 +65,8 @@ class SoulToken(UUIDMixin, TimestampMixin, Base):
     metadata_: Mapped[dict] = mapped_column("metadata", JSON, default=dict)
 
     # Relationships
-    person: Mapped["Person"] = relationship(  # noqa: F821
-        "Person", back_populates="soul_token"
-    )
-    trades: Mapped[list["Trade"]] = relationship(  # noqa: F821
-        "Trade", back_populates="soul_token", lazy="dynamic"
-    )
-    candles: Mapped[list["PriceCandle"]] = relationship(  # noqa: F821
+    person: Mapped[Person] = relationship("Person", back_populates="soul_token")
+    trades: Mapped[list[Trade]] = relationship("Trade", back_populates="soul_token", lazy="dynamic")
+    candles: Mapped[list[PriceCandle]] = relationship(
         "PriceCandle", back_populates="soul_token", lazy="dynamic"
     )

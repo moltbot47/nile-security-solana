@@ -30,9 +30,7 @@ class TestDashboardPages:
 @pytest.mark.asyncio
 class TestCapturePage:
     async def test_playwright_not_installed(self):
-        with patch.dict(
-            "sys.modules", {"playwright": None, "playwright.async_api": None}
-        ):
+        with patch.dict("sys.modules", {"playwright": None, "playwright.async_api": None}):
             result = await capture_page("http://localhost", "/", "test")
             assert result is None
 
@@ -54,18 +52,19 @@ class TestCapturePage:
         mock_pw_mod = MagicMock()
         mock_pw_mod.async_playwright = mock_async_pw
 
-        with patch.dict("sys.modules", {
-            "playwright": MagicMock(),
-            "playwright.async_api": mock_pw_mod,
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "playwright": MagicMock(),
+                "playwright.async_api": mock_pw_mod,
+            },
+        ):
             import importlib
 
             import nile.discord.screenshots as ss
 
             importlib.reload(ss)
-            result = await ss.capture_page(
-                "http://localhost:3000", "/", "dashboard"
-            )
+            result = await ss.capture_page("http://localhost:3000", "/", "dashboard")
             assert result is not None
             assert str(result).endswith("dashboard.png")
 
@@ -73,24 +72,23 @@ class TestCapturePage:
         """General exception in capture returns None."""
         mock_pw_mod = MagicMock()
         mock_ctx = AsyncMock()
-        mock_ctx.__aenter__ = AsyncMock(
-            side_effect=Exception("Browser crash")
-        )
+        mock_ctx.__aenter__ = AsyncMock(side_effect=Exception("Browser crash"))
         mock_ctx.__aexit__ = AsyncMock(return_value=False)
         mock_pw_mod.async_playwright = MagicMock(return_value=mock_ctx)
 
-        with patch.dict("sys.modules", {
-            "playwright": MagicMock(),
-            "playwright.async_api": mock_pw_mod,
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "playwright": MagicMock(),
+                "playwright.async_api": mock_pw_mod,
+            },
+        ):
             import importlib
 
             import nile.discord.screenshots as ss
 
             importlib.reload(ss)
-            result = await ss.capture_page(
-                "http://localhost", "/", "test"
-            )
+            result = await ss.capture_page("http://localhost", "/", "test")
             assert result is None
 
 

@@ -199,9 +199,7 @@ class TestConsensus:
 
         # Should have created a valuation snapshot
         result = await db_session.execute(
-            select(ValuationSnapshot).where(
-                ValuationSnapshot.person_id == person.id
-            )
+            select(ValuationSnapshot).where(ValuationSnapshot.person_id == person.id)
         )
         snapshot = result.scalar_one_or_none()
         assert snapshot is not None
@@ -222,9 +220,7 @@ class TestConsensus:
         )
 
         # Two rejections → impossible to reach quorum of 2
-        await vote_on_report(
-            db_session, agent_id="agent-2", event_id=event.id, approve=False
-        )
+        await vote_on_report(db_session, agent_id="agent-2", event_id=event.id, approve=False)
         updated = await vote_on_report(
             db_session, agent_id="agent-3", event_id=event.id, approve=False
         )
@@ -245,12 +241,8 @@ class TestConsensus:
         )
 
         # Reach consensus
-        await vote_on_report(
-            db_session, agent_id="agent-2", event_id=event.id, approve=True
-        )
+        await vote_on_report(db_session, agent_id="agent-2", event_id=event.id, approve=True)
 
         # Try to vote after finalization
         with pytest.raises(ValueError, match="already confirmed"):
-            await vote_on_report(
-                db_session, agent_id="agent-3", event_id=event.id, approve=True
-            )
+            await vote_on_report(db_session, agent_id="agent-3", event_id=event.id, approve=True)

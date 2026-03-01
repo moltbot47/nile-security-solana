@@ -34,11 +34,14 @@ class TestJwtWarning:
         import warnings
 
         with (
-            patch.dict("os.environ", {
-                "NILE_JWT_SECRET": "nile-dev-secret-change-me",
-                "NILE_ENV": "production",
-                "NILE_DATABASE_URL": "sqlite+aiosqlite://",
-            }),
+            patch.dict(
+                "os.environ",
+                {
+                    "NILE_JWT_SECRET": "nile-dev-secret-change-me",
+                    "NILE_ENV": "production",
+                    "NILE_DATABASE_URL": "sqlite+aiosqlite://",
+                },
+            ),
             warnings.catch_warnings(record=True) as w,
         ):
             warnings.simplefilter("always")
@@ -47,9 +50,7 @@ class TestJwtWarning:
             importlib.reload(nile.config)
 
             # Should have produced a warning
-            security_warnings = [
-                x for x in w if "SECURITY WARNING" in str(x.message)
-            ]
+            security_warnings = [x for x in w if "SECURITY WARNING" in str(x.message)]
             assert len(security_warnings) >= 1
 
         # Reload with defaults to restore

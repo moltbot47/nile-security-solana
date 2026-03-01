@@ -79,7 +79,7 @@ async def _fetch_onchain_idl(program_address: str) -> dict | None:
             # Might not be compressed (older Anchor versions)
             idl_json = compressed
 
-        return json.loads(idl_json)
+        return json.loads(idl_json)  # type: ignore[no-any-return]
 
     except Exception:
         logger.debug("Failed to fetch on-chain IDL for %s", program_address)

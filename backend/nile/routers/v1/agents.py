@@ -275,7 +275,7 @@ async def heartbeat(
         raise HTTPException(status_code=404, detail="Agent not found")
 
     agent.is_online = True
-    agent.last_heartbeat = datetime.now(UTC)
+    agent.last_heartbeat = datetime.now(UTC)  # type: ignore[assignment]
     await db.commit()
 
     return {"status": "ok", "agent_id": str(agent_id)}

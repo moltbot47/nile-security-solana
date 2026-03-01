@@ -1,6 +1,6 @@
 """Tests for soul_collaboration — Redis pub/sub event pipelines between agent types."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -19,9 +19,7 @@ def mock_redis():
     mock_r = AsyncMock()
     mock_r.publish = AsyncMock()
     mock_r.close = AsyncMock()
-    with patch(
-        "nile.services.soul_collaboration.aioredis.from_url", return_value=mock_r
-    ):
+    with patch("nile.services.soul_collaboration.aioredis.from_url", return_value=mock_r):
         yield mock_r
 
 

@@ -1,7 +1,10 @@
 """PriceCandle model — OHLCV data for soul token price charts."""
 
+from __future__ import annotations
+
 import uuid
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     BigInteger,
@@ -16,6 +19,9 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from nile.models.base import Base
+
+if TYPE_CHECKING:
+    from nile.models.soul_token import SoulToken
 
 
 class PriceCandle(Base):
@@ -45,6 +51,4 @@ class PriceCandle(Base):
         ),
     )
 
-    soul_token: Mapped["SoulToken"] = relationship(  # noqa: F821
-        "SoulToken", back_populates="candles"
-    )
+    soul_token: Mapped[SoulToken] = relationship("SoulToken", back_populates="candles")

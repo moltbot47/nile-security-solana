@@ -80,7 +80,5 @@ class TestSubmitScoreOnchain:
 class TestRegisterProgramOnchain:
     @patch("nile.services.onchain_writer._is_enabled", return_value=False)
     async def test_disabled_returns_none(self, _mock):
-        result = await register_program_onchain(
-            program_address="test", name="Test Program"
-        )
+        result = await register_program_onchain(program_address="test", name="Test Program")
         assert result is None

@@ -15,9 +15,7 @@ from nile.services.ecosystem_checker import (
 @pytest.mark.asyncio
 class TestCheckKnownProgram:
     async def test_known_program_returns_name(self):
-        result = await check_known_program(
-            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-        )
+        result = await check_known_program("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
         assert result == "SPL Token"
 
     async def test_unknown_program_returns_none(self):
@@ -25,9 +23,7 @@ class TestCheckKnownProgram:
         assert result is None
 
     async def test_system_program(self):
-        result = await check_known_program(
-            "11111111111111111111111111111111"
-        )
+        result = await check_known_program("11111111111111111111111111111111")
         assert result == "System Program"
 
 
@@ -101,9 +97,7 @@ class TestCheckProgramAgeDays:
 
     @patch("nile.services.chain_service.chain_service")
     async def test_rpc_failure_returns_zero(self, mock_chain):
-        mock_chain.get_transaction_history = AsyncMock(
-            side_effect=Exception("RPC error")
-        )
+        mock_chain.get_transaction_history = AsyncMock(side_effect=Exception("RPC error"))
 
         age = await check_program_age_days("FailProgram")
         assert age == 0

@@ -129,7 +129,7 @@ class NileBot(discord.Client):
                 }
                 category = await guild.create_category(
                     NILE_CATEGORY,
-                    overwrites=overwrites,
+                    overwrites=overwrites,  # type: ignore[arg-type]
                     reason="NILE Security Intelligence Platform",
                 )
                 logger.info("Created category: %s", NILE_CATEGORY)
@@ -165,7 +165,7 @@ class NileBot(discord.Client):
                         channel_name,
                         category=category,
                         topic=topic,
-                        overwrites=bot_overwrites,
+                        overwrites=bot_overwrites,  # type: ignore[arg-type]
                         reason="NILE bot auto-created",
                     )
                     self._channels[channel_name] = ch

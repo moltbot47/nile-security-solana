@@ -105,8 +105,8 @@ async def penalize_false_positive(
     result = await db.execute(select(Agent).where(Agent.id == contribution.agent_id))
     agent = result.scalar_one_or_none()
     if agent:
-        agent.total_points -= original_points
-        agent.total_points += FALSE_POSITIVE_PENALTY
+        agent.total_points -= original_points  # type: ignore[attr-defined]
+        agent.total_points += FALSE_POSITIVE_PENALTY  # type: ignore[attr-defined]
 
     await db.flush()
 
