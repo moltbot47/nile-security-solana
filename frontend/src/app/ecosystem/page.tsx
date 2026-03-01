@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { api, createEventSource } from "@/lib/api";
 import type { Agent, EcosystemEvent } from "@/lib/types";
-import { scoreToGrade, gradeColor } from "@/lib/utils";
+import { scoreToGrade } from "@/lib/utils";
 
 interface GraphNode {
   id: string;
@@ -17,12 +17,6 @@ interface GraphNode {
   vx: number;
   vy: number;
   radius: number;
-}
-
-interface GraphEdge {
-  source: string;
-  target: string;
-  type: string;
 }
 
 const CAPABILITY_COLORS: Record<string, string> = {
