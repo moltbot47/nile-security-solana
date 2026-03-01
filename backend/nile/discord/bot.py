@@ -564,6 +564,6 @@ def run_bot() -> None:
     bot.run(settings.discord_token)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     logging.basicConfig(level=logging.INFO)
     run_bot()

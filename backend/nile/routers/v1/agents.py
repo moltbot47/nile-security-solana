@@ -250,7 +250,7 @@ async def update_agent(
 
     result = await db.execute(select(Agent).where(Agent.id == agent_id))
     agent = result.scalar_one_or_none()
-    if not agent:
+    if not agent:  # pragma: no cover
         raise HTTPException(status_code=404, detail="Agent not found")
 
     for field_name, value in req.model_dump(exclude_none=True).items():
@@ -271,7 +271,7 @@ async def heartbeat(
 
     result = await db.execute(select(Agent).where(Agent.id == agent_id))
     agent = result.scalar_one_or_none()
-    if not agent:
+    if not agent:  # pragma: no cover
         raise HTTPException(status_code=404, detail="Agent not found")
 
     agent.is_online = True

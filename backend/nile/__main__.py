@@ -4,7 +4,7 @@ import uvicorn
 
 from nile.config import settings
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     uvicorn.run(
         "nile.app:app",
         host="0.0.0.0",

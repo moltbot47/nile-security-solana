@@ -167,7 +167,7 @@ async def check_pump_and_dump(
         wallet_volumes[addr] = wallet_volumes.get(addr, 0) + float(t.sol_amount)
 
     total_buy_vol = sum(wallet_volumes.values())
-    if total_buy_vol <= 0:
+    if total_buy_vol <= 0:  # pragma: no cover — defensive guard
         return None
 
     # Top 3 wallets by volume
