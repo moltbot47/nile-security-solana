@@ -22,7 +22,12 @@ export function NileScoreGauge({ score, size = "md", label }: NileScoreGaugeProp
   return (
     <div className="flex flex-col items-center gap-2">
       <div className={cn("relative", sizeMap[size])}>
-        <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+        <svg
+          className="w-full h-full -rotate-90"
+          viewBox="0 0 100 100"
+          role="img"
+          aria-label={`NILE Score: ${score.toFixed(1)}, Grade: ${grade}`}
+        >
           <circle cx="50" cy="50" r="45" fill="none" stroke="#262626" strokeWidth="8" />
           <circle
             cx="50"

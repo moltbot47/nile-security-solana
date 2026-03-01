@@ -2,6 +2,8 @@
 
 import logging
 import sys
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 
 import structlog
 from fastapi import FastAPI, Request, Response
@@ -80,11 +82,25 @@ def _configure_logging() -> None:
 
 def create_app() -> FastAPI:
     _configure_logging()
+    log = structlog.get_logger("nile.app")
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+        log.info(
+            "app_started",
+            version="0.3.0",
+            env=settings.env,
+            chain=settings.chain,
+            network=settings.solana_network,
+        )
+        yield
+        log.info("app_shutdown")
 
     app = FastAPI(
         title=settings.app_name,
         description="NILE Smart Contract Security Intelligence Platform",
         version="0.3.0",
+        lifespan=lifespan,
     )
 
     # --- Exception handlers ---
@@ -104,29 +120,12 @@ def create_app() -> FastAPI:
         CORSMiddleware,
         allow_origins=settings.cors_origins,
         allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+        allow_headers=["Content-Type", "Authorization", "X-Request-ID"],
     )
 
     # --- Routes ---
     app.include_router(api_router)
-
-    # --- Lifecycle events ---
-    log = structlog.get_logger("nile.app")
-
-    @app.on_event("startup")
-    async def on_startup() -> None:
-        log.info(
-            "app_started",
-            version="0.3.0",
-            env=settings.env,
-            chain=settings.chain,
-            network=settings.solana_network,
-        )
-
-    @app.on_event("shutdown")
-    async def on_shutdown() -> None:
-        log.info("app_shutdown")
 
     return app
 

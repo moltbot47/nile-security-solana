@@ -82,7 +82,7 @@ async def verify_contribution(
     )
 
     if not is_valid:
-        # Apply false positive penalty via incentive engine
+        # Lazy import to avoid circular dependency with incentive_engine
         from nile.services.incentive_engine import penalize_false_positive
 
         await penalize_false_positive(db, str(contribution_id))

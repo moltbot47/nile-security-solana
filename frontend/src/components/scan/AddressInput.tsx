@@ -53,7 +53,11 @@ export function AddressInput({ onSubmit, disabled }: AddressInputProps) {
   return (
     <div className="space-y-2">
       <div className="flex gap-3">
+        <label htmlFor="solana-address-input" className="sr-only">
+          Solana address
+        </label>
         <input
+          id="solana-address-input"
           type="text"
           value={value}
           onChange={(e) => {
@@ -64,6 +68,8 @@ export function AddressInput({ onSubmit, disabled }: AddressInputProps) {
           onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
           placeholder="Paste a Solana program or token address..."
           disabled={disabled}
+          aria-invalid={!!error}
+          aria-describedby={error ? "address-error" : undefined}
           className={cn(
             "flex-1 px-4 py-3 bg-gray-900 border rounded-lg text-sm font-mono",
             "placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-nile-500/50",
@@ -86,7 +92,11 @@ export function AddressInput({ onSubmit, disabled }: AddressInputProps) {
           {disabled ? "Scanning..." : "Scan"}
         </button>
       </div>
-      {error && <p className="text-security-danger text-xs">{error}</p>}
+      {error && (
+        <p id="address-error" role="alert" className="text-security-danger text-xs">
+          {error}
+        </p>
+      )}
     </div>
   );
 }
