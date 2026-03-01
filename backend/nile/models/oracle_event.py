@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 from typing import TYPE_CHECKING
 
-from sqlalchemy import JSON, ForeignKey, Integer, Numeric, String, Text, Uuid
+from sqlalchemy import JSON, ForeignKey, Index, Integer, Numeric, String, Text, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from nile.models.base import Base, TimestampMixin, UUIDMixin
@@ -47,6 +47,10 @@ class OracleEvent(UUIDMixin, TimestampMixin, Base):
     agent_votes: Mapped[dict] = mapped_column(
         JSON, default=dict
     )  # {agent_id: {vote: "confirm"|"reject", impact: int}}
+
+    __table_args__ = (
+        Index("ix_oracle_person_status", "person_id", "status"),
+    )
 
     # Relationships
     person: Mapped[Person] = relationship("Person", back_populates="oracle_events")

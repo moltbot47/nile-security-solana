@@ -18,6 +18,7 @@ from nile.services.program_analyzer import program_analyzer
 logger = logging.getLogger(__name__)
 
 POLL_INTERVAL_SECONDS = 5
+MAX_BACKOFF_SECONDS = 60
 
 
 async def process_scan_job(db: AsyncSession, job: ScanJob) -> None:
@@ -148,11 +149,20 @@ async def poll_and_process() -> None:
 
 
 async def run_worker() -> None:
-    """Main worker loop — polls for jobs continuously."""
+    """Main worker loop — polls for jobs with exponential backoff on failures."""
     logger.info("NILE scan worker starting...")
+    consecutive_failures = 0
     while True:
         try:
             await poll_and_process()
+            consecutive_failures = 0
+            await asyncio.sleep(POLL_INTERVAL_SECONDS)
         except Exception:
-            logger.exception("Worker poll cycle failed")
-        await asyncio.sleep(POLL_INTERVAL_SECONDS)
+            consecutive_failures += 1
+            backoff = min(POLL_INTERVAL_SECONDS * (2 ** consecutive_failures), MAX_BACKOFF_SECONDS)
+            logger.exception(
+                "Worker poll cycle failed (attempt %d, backoff %ds)",
+                consecutive_failures,
+                backoff,
+            )
+            await asyncio.sleep(backoff)

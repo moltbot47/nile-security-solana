@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 from typing import TYPE_CHECKING
 
-from sqlalchemy import ForeignKey, Integer, Numeric, String, Uuid
+from sqlalchemy import ForeignKey, Index, Integer, Numeric, String, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from nile.models.base import Base, TimestampMixin, UUIDMixin
@@ -42,6 +42,11 @@ class Trade(UUIDMixin, TimestampMixin, Base):
 
     # Source: "chain" (indexed from on-chain) or "backend" (off-chain matching)
     source: Mapped[str] = mapped_column(String(16), default="chain")
+
+    __table_args__ = (
+        Index("ix_trade_token_created", "soul_token_id", "created_at"),
+        Index("ix_trade_trader_created", "trader_address", "created_at"),
+    )
 
     # Relationships
     soul_token: Mapped[SoulToken] = relationship("SoulToken", back_populates="trades")
