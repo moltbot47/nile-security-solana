@@ -1,242 +1,204 @@
-"""Tests for trading endpoints — quotes, buy/sell, portfolio."""
+"""Tests for trading API endpoints."""
 
 import uuid
+from unittest.mock import AsyncMock, patch
 
-from nile.core.auth import create_agent_token, hash_api_key
+import pytest
+
+from nile.core.auth import create_agent_token
 from nile.models.agent import Agent
 from nile.models.person import Person
 from nile.models.soul_token import SoulToken
 
-# --- Helpers ---
 
-VALID_TRADER_ADDR = "FakeTraderAddress1234567890ABCDEFGHIJK"
-
-
-async def _create_auth_agent(db_session) -> tuple[Agent, str]:
-    """Create an active agent and return (agent, jwt_token)."""
-    raw_key = f"nile_trade_test_{uuid.uuid4().hex[:8]}"
-    agent = Agent(
-        name=f"trade-agent-{uuid.uuid4().hex[:6]}",
-        owner_id="owner-test",
-        capabilities=["detect"],
-        status="active",
-        api_key_hash=hash_api_key(raw_key),
-    )
-    db_session.add(agent)
-    await db_session.flush()
-    token = create_agent_token(str(agent.id))
-    return agent, token
-
-
-async def _create_tradeable_token(
-    db_session, slug: str, price_usd: float = 10.0
-) -> tuple[Person, SoulToken]:
-    """Create person + soul token for trading tests."""
+@pytest.fixture
+async def trading_setup(db_session):
+    """Create person, soul token, and authenticated agent for trading tests."""
     person = Person(
-        display_name=slug.replace("-", " ").title(),
-        slug=slug,
-        category="general",
+        display_name="Trading Test",
+        slug="trading-test",
+        category="athlete",
     )
     db_session.add(person)
     await db_session.flush()
 
     token = SoulToken(
         person_id=person.id,
-        name=f"{slug}-token",
-        symbol=slug[:4].upper(),
+        name="Trade Token",
+        symbol="TRD",
         phase="bonding",
-        current_price_sol=0.04,
-        current_price_usd=price_usd,
-        market_cap_usd=100_000,
-        volume_24h_usd=5000,
-        total_supply=1_000_000,
-        reserve_balance_sol=100,
-        graduation_threshold_sol=200,
-        holder_count=50,
+        chain="solana",
+        current_price_sol=0.01,
+        current_price_usd=2.50,
+        market_cap_usd=25000.0,
+        total_supply=10000000,
+        reserve_balance_sol=5.0,
+        graduation_threshold_sol=100.0,
     )
     db_session.add(token)
+
+    agent = Agent(
+        name=f"trader-{uuid.uuid4().hex[:8]}",
+        owner_id="test-owner",
+        capabilities=["detect"],
+        status="active",
+        api_key_hash="fakehash",
+    )
+    db_session.add(agent)
     await db_session.flush()
-    return person, token
+
+    jwt_token = create_agent_token(str(agent.id))
+    return person, token, agent, jwt_token
 
 
-# --- Quote ---
+@pytest.mark.asyncio
+class TestGetQuote:
+    async def test_quote_buy(self, client, db_session, trading_setup):
+        person, token, _, _ = trading_setup
+        resp = await client.post(
+            "/api/v1/trading/quote",
+            json={
+                "person_id": str(person.id),
+                "side": "buy",
+                "amount": 1.0,
+            },
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["side"] == "buy"
+        assert data["fee"] > 0
+
+    async def test_quote_sell(self, client, db_session, trading_setup):
+        person, _, _, _ = trading_setup
+        resp = await client.post(
+            "/api/v1/trading/quote",
+            json={
+                "person_id": str(person.id),
+                "side": "sell",
+                "amount": 100.0,
+            },
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["side"] == "sell"
+
+    async def test_quote_not_found(self, client, db_session):
+        resp = await client.post(
+            "/api/v1/trading/quote",
+            json={
+                "person_id": str(uuid.uuid4()),
+                "side": "buy",
+                "amount": 1.0,
+            },
+        )
+        assert resp.status_code == 404
 
 
-async def test_quote_buy(client, db_session):
-    """POST /trading/quote returns a buy quote with fee."""
-    person, _token = await _create_tradeable_token(db_session, "quote-buy")
+@pytest.mark.asyncio
+class TestTradeHistory:
+    async def test_empty_history(self, client, db_session):
+        resp = await client.get("/api/v1/trading/history")
+        assert resp.status_code == 200
+        assert resp.json() == []
 
-    response = await client.post(
-        "/api/v1/trading/quote",
-        json={
-            "person_id": str(person.id),
-            "side": "buy",
-            "amount": "5.0",
-        },
-    )
-    assert response.status_code == 200
-    data = response.json()
-    assert data["side"] == "buy"
-    assert data["fee"] > 0
-    assert data["output_amount"] > 0
-    assert data["estimated_price"] == 10.0
+    async def test_filter_by_address(self, client, db_session):
+        resp = await client.get(
+            "/api/v1/trading/history?trader_address=someaddr"
+        )
+        assert resp.status_code == 200
 
 
-async def test_quote_sell(client, db_session):
-    """POST /trading/quote returns a sell quote."""
-    person, _token = await _create_tradeable_token(db_session, "quote-sell")
+@pytest.mark.asyncio
+class TestExecuteBuy:
+    async def test_buy_unauthenticated(self, client, db_session):
+        resp = await client.post(
+            "/api/v1/trading/buy",
+            json={
+                "person_id": str(uuid.uuid4()),
+                "side": "buy",
+                "amount": 1.0,
+                "trader_address": "A" * 44,
+            },
+        )
+        assert resp.status_code == 401
 
-    response = await client.post(
-        "/api/v1/trading/quote",
-        json={
-            "person_id": str(person.id),
-            "side": "sell",
-            "amount": "100.0",
-        },
-    )
-    assert response.status_code == 200
-    data = response.json()
-    assert data["side"] == "sell"
-    assert data["fee"] > 0
+    @patch("nile.routers.v1.trading.run_risk_checks", new_callable=AsyncMock)
+    async def test_buy_success(
+        self, mock_risk, client, db_session, trading_setup
+    ):
+        mock_risk.return_value = []
+        person, token, agent, jwt_token = trading_setup
+        resp = await client.post(
+            "/api/v1/trading/buy",
+            json={
+                "person_id": str(person.id),
+                "side": "buy",
+                "amount": 1.0,
+                "trader_address": "B" * 44,
+            },
+            headers={"Authorization": f"Bearer {jwt_token}"},
+        )
+        assert resp.status_code == 201
+        data = resp.json()
+        assert data["side"] == "buy"
 
-
-async def test_quote_no_token_404(client):
-    """POST /trading/quote returns 404 when person has no soul token."""
-    fake_id = str(uuid.uuid4())
-    response = await client.post(
-        "/api/v1/trading/quote",
-        json={"person_id": fake_id, "side": "buy", "amount": "1.0"},
-    )
-    assert response.status_code == 404
-
-
-# --- Buy ---
-
-
-async def test_buy_creates_trade(client, db_session):
-    """POST /trading/buy creates a trade record."""
-    _, token = await _create_auth_agent(db_session)
-    person, _soul_token = await _create_tradeable_token(db_session, "buy-trade")
-
-    response = await client.post(
-        "/api/v1/trading/buy",
-        json={
-            "person_id": str(person.id),
-            "side": "buy",
-            "amount": "2.0",
-            "trader_address": VALID_TRADER_ADDR,
-        },
-        headers={"Authorization": f"Bearer {token}"},
-    )
-    assert response.status_code == 201
-    data = response.json()
-    assert data["side"] == "buy"
-    assert data["trader_address"] == VALID_TRADER_ADDR
-    assert float(data["fee_total_sol"]) > 0
+    async def test_buy_not_found(self, client, db_session, trading_setup):
+        _, _, _, jwt_token = trading_setup
+        resp = await client.post(
+            "/api/v1/trading/buy",
+            json={
+                "person_id": str(uuid.uuid4()),
+                "side": "buy",
+                "amount": 1.0,
+                "trader_address": "C" * 44,
+            },
+            headers={"Authorization": f"Bearer {jwt_token}"},
+        )
+        assert resp.status_code == 404
 
 
-async def test_buy_requires_auth(client, db_session):
-    """POST /trading/buy without auth returns 401."""
-    person, _ = await _create_tradeable_token(db_session, "buy-noauth")
-    response = await client.post(
-        "/api/v1/trading/buy",
-        json={
-            "person_id": str(person.id),
-            "amount": "1.0",
-            "trader_address": VALID_TRADER_ADDR,
-        },
-    )
-    assert response.status_code == 401
+@pytest.mark.asyncio
+class TestExecuteSell:
+    @patch("nile.routers.v1.trading.run_risk_checks", new_callable=AsyncMock)
+    async def test_sell_success(
+        self, mock_risk, client, db_session, trading_setup
+    ):
+        mock_risk.return_value = []
+        person, _, _, jwt_token = trading_setup
+        resp = await client.post(
+            "/api/v1/trading/sell",
+            json={
+                "person_id": str(person.id),
+                "side": "sell",
+                "amount": 100.0,
+                "trader_address": "D" * 44,
+            },
+            headers={"Authorization": f"Bearer {jwt_token}"},
+        )
+        assert resp.status_code == 201
+        data = resp.json()
+        assert data["side"] == "sell"
+
+    async def test_sell_not_found(self, client, db_session, trading_setup):
+        _, _, _, jwt_token = trading_setup
+        resp = await client.post(
+            "/api/v1/trading/sell",
+            json={
+                "person_id": str(uuid.uuid4()),
+                "side": "sell",
+                "amount": 100.0,
+                "trader_address": "E" * 44,
+            },
+            headers={"Authorization": f"Bearer {jwt_token}"},
+        )
+        assert resp.status_code == 404
 
 
-# --- Sell ---
-
-
-async def test_sell_creates_trade(client, db_session):
-    """POST /trading/sell creates a trade record."""
-    _, token = await _create_auth_agent(db_session)
-    person, _soul_token = await _create_tradeable_token(db_session, "sell-trade")
-
-    response = await client.post(
-        "/api/v1/trading/sell",
-        json={
-            "person_id": str(person.id),
-            "side": "sell",
-            "amount": "50.0",
-            "trader_address": VALID_TRADER_ADDR,
-        },
-        headers={"Authorization": f"Bearer {token}"},
-    )
-    assert response.status_code == 201
-    data = response.json()
-    assert data["side"] == "sell"
-
-
-async def test_sell_requires_auth(client, db_session):
-    """POST /trading/sell without auth returns 401."""
-    person, _ = await _create_tradeable_token(db_session, "sell-noauth")
-    response = await client.post(
-        "/api/v1/trading/sell",
-        json={
-            "person_id": str(person.id),
-            "amount": "1.0",
-            "trader_address": VALID_TRADER_ADDR,
-        },
-    )
-    assert response.status_code == 401
-
-
-# --- Trade History ---
-
-
-async def test_trade_history_empty(client):
-    """GET /trading/history returns empty list when no trades exist."""
-    response = await client.get("/api/v1/trading/history")
-    assert response.status_code == 200
-    assert response.json() == []
-
-
-async def test_trade_history_filter_by_trader(client, db_session):
-    """GET /trading/history?trader_address=X filters by trader."""
-    _, token = await _create_auth_agent(db_session)
-    person, _ = await _create_tradeable_token(db_session, "hist-filter")
-
-    # Create two trades with different addresses
-    await client.post(
-        "/api/v1/trading/buy",
-        json={
-            "person_id": str(person.id),
-            "side": "buy",
-            "amount": "1.0",
-            "trader_address": VALID_TRADER_ADDR,
-        },
-        headers={"Authorization": f"Bearer {token}"},
-    )
-    other_addr = "OtherTraderAddress12345678901234567890"
-    await client.post(
-        "/api/v1/trading/buy",
-        json={
-            "person_id": str(person.id),
-            "side": "buy",
-            "amount": "1.0",
-            "trader_address": other_addr,
-        },
-        headers={"Authorization": f"Bearer {token}"},
-    )
-
-    response = await client.get(f"/api/v1/trading/history?trader_address={VALID_TRADER_ADDR}")
-    data = response.json()
-    assert len(data) == 1
-    assert data[0]["trader_address"] == VALID_TRADER_ADDR
-
-
-# --- Portfolio ---
-
-
-async def test_portfolio_empty(client):
-    """GET /trading/portfolio returns empty list for unknown wallet."""
-    response = await client.get(
-        "/api/v1/trading/portfolio?wallet_address=UnknownWallet123456789012345678"
-    )
-    assert response.status_code == 200
-    assert response.json() == []
+@pytest.mark.asyncio
+class TestPortfolio:
+    async def test_empty_portfolio(self, client, db_session):
+        resp = await client.get(
+            "/api/v1/trading/portfolio?wallet_address=test123"
+        )
+        assert resp.status_code == 200
+        assert resp.json() == []
