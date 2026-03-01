@@ -141,3 +141,28 @@ class PortfolioItem(BaseModel):
     unrealized_pnl_sol: float | None = None
 
     model_config = {"from_attributes": True}
+
+
+# --- Risk Schemas ---
+
+
+class LastHourStats(BaseModel):
+    trade_count: int
+    unique_traders: int
+    total_volume_sol: float
+
+
+class RiskSummaryResponse(BaseModel):
+    soul_token_id: str
+    circuit_breaker_active: bool
+    circuit_breaker_expiry: str | None = None
+    last_hour: LastHourStats
+
+
+class CircuitBreakerResponse(BaseModel):
+    active_breakers: dict[str, str]
+
+
+class HeartbeatResponse(BaseModel):
+    status: str
+    agent_id: str

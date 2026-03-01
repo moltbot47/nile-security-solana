@@ -53,7 +53,8 @@ curl -X POST http://localhost:8000/api/v1/scans/solana \
 ## Tests
 
 ```bash
-cd backend && uv run pytest -v          # 54 tests
+cd backend && uv run pytest -v          # 721+ tests
+cd frontend && npx vitest run           # 122 tests
 cd frontend && npx tsc --noEmit         # Type check
 cd frontend && npx next build           # 15 pages
 ```

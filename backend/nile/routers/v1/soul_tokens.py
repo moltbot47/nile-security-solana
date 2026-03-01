@@ -12,8 +12,10 @@ from nile.models.price_candle import PriceCandle
 from nile.models.soul_token import SoulToken
 from nile.models.trade import Trade
 from nile.schemas.soul_token import (
+    CircuitBreakerResponse,
     MarketOverview,
     PriceCandleResponse,
+    RiskSummaryResponse,
     SoulTokenListItem,
     SoulTokenResponse,
     TradeResponse,
@@ -188,19 +190,20 @@ async def list_trades(
     return [TradeResponse.model_validate(t) for t in result.scalars().all()]
 
 
-@router.get("/risk/circuit-breakers")
-async def active_circuit_breakers() -> dict:
+@router.get("/risk/circuit-breakers", response_model=CircuitBreakerResponse)
+async def active_circuit_breakers() -> CircuitBreakerResponse:
     """Get all currently active circuit breakers."""
-    return {"active_breakers": get_active_breakers()}
+    return CircuitBreakerResponse(active_breakers=get_active_breakers())
 
 
-@router.get("/{token_id}/risk")
+@router.get("/{token_id}/risk", response_model=RiskSummaryResponse)
 async def token_risk(
     token_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-) -> dict:
+) -> RiskSummaryResponse:
     """Get risk summary for a soul token including circuit breaker status."""
-    return await get_token_risk_summary(db, str(token_id))
+    data = await get_token_risk_summary(db, str(token_id))
+    return RiskSummaryResponse(**data)
 
 
 @router.get("/{token_id}/candles", response_model=list[PriceCandleResponse])

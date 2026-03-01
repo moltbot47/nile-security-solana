@@ -19,6 +19,7 @@ from nile.core.event_bus import publish_event
 from nile.core.rate_limit import RateLimiter
 from nile.models.agent import Agent
 from nile.models.agent_contribution import AgentContribution
+from nile.schemas.soul_token import HeartbeatResponse
 
 router = APIRouter()
 
@@ -274,13 +275,13 @@ async def update_agent(
     return await get_agent(agent_id, db)
 
 
-@router.post("/{agent_id}/heartbeat")
+@router.post("/{agent_id}/heartbeat", response_model=HeartbeatResponse)
 async def heartbeat(
     agent_id: uuid.UUID,
     request: Request,
     current_agent: Agent = Depends(get_current_agent),
     db: AsyncSession = Depends(get_db),
-):
+) -> HeartbeatResponse:
     """Report agent liveness. Expected every 30s."""
     heartbeat_limiter.check(request)
     if str(current_agent.id) != str(agent_id):
@@ -295,7 +296,7 @@ async def heartbeat(
     agent.last_heartbeat = datetime.now(UTC)  # type: ignore[assignment]
     await db.commit()
 
-    return {"status": "ok", "agent_id": str(agent_id)}
+    return HeartbeatResponse(status="ok", agent_id=str(agent_id))
 
 
 @router.get("/{agent_id}/contributions", response_model=list[ContributionResponse])
