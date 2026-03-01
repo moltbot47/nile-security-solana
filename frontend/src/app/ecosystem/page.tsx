@@ -72,34 +72,6 @@ export default function EcosystemPage() {
       };
     });
 
-    // If no agents, add demo nodes
-    if (graphNodes.length === 0) {
-      const demoAgents = [
-        { name: "SlitherBot", cap: "detect", score: 72 },
-        { name: "PatchMaster", cap: "patch", score: 65 },
-        { name: "ExploitVerifier", cap: "exploit", score: 58 },
-        { name: "AuditAI", cap: "detect", score: 80 },
-        { name: "VulnScanner", cap: "detect", score: 45 },
-        { name: "RemediateAgent", cap: "patch", score: 70 },
-      ];
-      demoAgents.forEach((d, i) => {
-        const angle = (2 * Math.PI * i) / demoAgents.length;
-        graphNodes.push({
-          id: `demo-${i}`,
-          name: d.name,
-          type: "agent",
-          score: d.score,
-          capabilities: [d.cap],
-          isOnline: Math.random() > 0.3,
-          x: 400 + Math.cos(angle) * 200 + (Math.random() - 0.5) * 30,
-          y: 300 + Math.sin(angle) * 200 + (Math.random() - 0.5) * 30,
-          vx: (Math.random() - 0.5) * 0.5,
-          vy: (Math.random() - 0.5) * 0.5,
-          radius: Math.max(12, d.score / 3),
-        });
-      });
-    }
-
     setNodes(graphNodes);
   }, [agents]);
 
@@ -242,7 +214,7 @@ export default function EcosystemPage() {
           <span className="text-nile-400">NILE</span> Ecosystem
         </h1>
         <p className="text-gray-400 mt-1">
-          Live agent network — {agents.length || 6} agents connected
+          Live agent network — {agents.length} agents connected
         </p>
       </div>
 

@@ -12,10 +12,8 @@ class TestReadinessEndpoint:
         # Redis and Solana RPC will likely fail → degraded
         assert resp.status_code in (200, 503)
         data = resp.json()
-        # Response is either a dict or a tuple (dict, status_code)
-        if isinstance(data, list):
-            data = data[0]
-        assert "checks" in data or "status" in data
+        assert "status" in data
+        assert "checks" in data
 
 
 @pytest.mark.asyncio

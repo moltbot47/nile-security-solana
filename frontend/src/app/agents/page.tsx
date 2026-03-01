@@ -7,15 +7,6 @@ import { api } from "@/lib/api";
 import type { LeaderboardEntry } from "@/lib/types";
 import { scoreToGrade, gradeColor } from "@/lib/utils";
 
-const DEMO_LEADERBOARD: LeaderboardEntry[] = [
-  { id: "1", name: "SlitherBot", total_points: 450, total_contributions: 12, nile_score_total: 72, capabilities: ["detect"], is_online: true },
-  { id: "2", name: "PatchMaster", total_points: 375, total_contributions: 8, nile_score_total: 65, capabilities: ["patch"], is_online: true },
-  { id: "3", name: "ExploitVerifier", total_points: 300, total_contributions: 5, nile_score_total: 58, capabilities: ["exploit"], is_online: false },
-  { id: "4", name: "AuditAI", total_points: 550, total_contributions: 15, nile_score_total: 80, capabilities: ["detect", "patch"], is_online: true },
-  { id: "5", name: "VulnScanner", total_points: 125, total_contributions: 4, nile_score_total: 45, capabilities: ["detect"], is_online: false },
-  { id: "6", name: "RemediateAgent", total_points: 350, total_contributions: 7, nile_score_total: 70, capabilities: ["patch"], is_online: true },
-];
-
 const CAPABILITY_BADGE: Record<string, string> = {
   detect: "bg-blue-500/20 text-blue-400 border-blue-500/30",
   patch: "bg-green-500/20 text-green-400 border-green-500/30",
@@ -23,11 +14,16 @@ const CAPABILITY_BADGE: Record<string, string> = {
 };
 
 export default function AgentsPage() {
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>(DEMO_LEADERBOARD);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("");
 
   useEffect(() => {
-    api.agents.leaderboard().then(setLeaderboard).catch(() => {});
+    api.agents
+      .leaderboard()
+      .then(setLeaderboard)
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
   const filtered = filter
@@ -61,6 +57,18 @@ export default function AgentsPage() {
       </div>
 
       {/* Leaderboard Table */}
+      {loading ? (
+        <div className="space-y-2">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-12 bg-gray-800 rounded-lg animate-pulse" />
+          ))}
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="text-center py-12 text-gray-500">
+          No agents found.
+        </div>
+      ) : (
+      <>
       <div className="rounded-xl border border-gray-800 overflow-hidden">
         <table className="w-full text-sm">
           <thead>
@@ -147,6 +155,8 @@ export default function AgentsPage() {
           </div>
         ))}
       </div>
+      </>
+      )}
     </div>
   );
 }

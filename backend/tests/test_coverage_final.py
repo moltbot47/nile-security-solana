@@ -193,8 +193,7 @@ class TestHealthRpcUnhealthy:
 
         assert resp.status_code in (200, 503)
         data = resp.json()
-        if isinstance(data, list):
-            data = data[0]
+        assert "status" in data
         assert "checks" in data
 
 

@@ -6,12 +6,6 @@ import { PersonCard } from "@/components/persons/PersonCard";
 import { api } from "@/lib/api";
 import type { MarketOverview, PersonListItem, SoulTokenListItem } from "@/lib/types";
 
-const DEMO_TRENDING: PersonListItem[] = [
-  { id: "1", display_name: "LeBron James", slug: "lebron-james", avatar_url: null, verification_level: "premium", category: "athlete", nile_total_score: 92, token_symbol: "BRON", token_price_usd: 14.50, token_market_cap_usd: 2_500_000 },
-  { id: "2", display_name: "Taylor Swift", slug: "taylor-swift", avatar_url: null, verification_level: "premium", category: "musician", nile_total_score: 88, token_symbol: "SWIFT", token_price_usd: 22.30, token_market_cap_usd: 4_100_000 },
-  { id: "4", display_name: "Elon Musk", slug: "elon-musk", avatar_url: null, verification_level: "premium", category: "entrepreneur", nile_total_score: 85, token_symbol: "ELON", token_price_usd: 31.20, token_market_cap_usd: 6_200_000 },
-];
-
 function formatUSD(value: number): string {
   if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(2)}M`;
   if (value >= 1_000) return `$${(value / 1_000).toFixed(1)}K`;
@@ -19,7 +13,7 @@ function formatUSD(value: number): string {
 }
 
 export default function MarketPage() {
-  const [trending, setTrending] = useState<PersonListItem[]>(DEMO_TRENDING);
+  const [trending, setTrending] = useState<PersonListItem[]>([]);
   const [newListings, setNewListings] = useState<PersonListItem[]>([]);
   const [tokens, setTokens] = useState<SoulTokenListItem[]>([]);
   const [overview, setOverview] = useState<MarketOverview | null>(null);

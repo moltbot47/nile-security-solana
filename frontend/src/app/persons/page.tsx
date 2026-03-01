@@ -5,15 +5,6 @@ import { PersonCard } from "@/components/persons/PersonCard";
 import { api } from "@/lib/api";
 import type { CategoryCount, PersonListItem } from "@/lib/types";
 
-const DEMO_PERSONS: PersonListItem[] = [
-  { id: "1", display_name: "LeBron James", slug: "lebron-james", avatar_url: null, verification_level: "premium", category: "athlete", nile_total_score: 92, token_symbol: "BRON", token_price_usd: 14.50, token_market_cap_usd: 2_500_000 },
-  { id: "2", display_name: "Taylor Swift", slug: "taylor-swift", avatar_url: null, verification_level: "premium", category: "musician", nile_total_score: 88, token_symbol: "SWIFT", token_price_usd: 22.30, token_market_cap_usd: 4_100_000 },
-  { id: "3", display_name: "MrBeast", slug: "mrbeast", avatar_url: null, verification_level: "verified", category: "creator", nile_total_score: 76, token_symbol: "BEAST", token_price_usd: 5.80, token_market_cap_usd: 890_000 },
-  { id: "4", display_name: "Elon Musk", slug: "elon-musk", avatar_url: null, verification_level: "premium", category: "entrepreneur", nile_total_score: 85, token_symbol: "ELON", token_price_usd: 31.20, token_market_cap_usd: 6_200_000 },
-  { id: "5", display_name: "Zendaya", slug: "zendaya", avatar_url: null, verification_level: "verified", category: "actor", nile_total_score: 71, token_symbol: "ZEN", token_price_usd: 3.40, token_market_cap_usd: 420_000 },
-  { id: "6", display_name: "Patrick Mahomes", slug: "patrick-mahomes", avatar_url: null, verification_level: "verified", category: "athlete", nile_total_score: 82, token_symbol: "MAHOMES", token_price_usd: 9.10, token_market_cap_usd: 1_600_000 },
-];
-
 const SORT_OPTIONS = [
   { value: "score", label: "NILE Score" },
   { value: "newest", label: "Newest" },
@@ -21,7 +12,8 @@ const SORT_OPTIONS = [
 ];
 
 export default function PersonsPage() {
-  const [persons, setPersons] = useState<PersonListItem[]>(DEMO_PERSONS);
+  const [persons, setPersons] = useState<PersonListItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState<CategoryCount[]>([]);
   const [activeCategory, setActiveCategory] = useState("");
   const [search, setSearch] = useState("");
@@ -39,7 +31,8 @@ export default function PersonsPage() {
         sort,
       })
       .then(setPersons)
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, [activeCategory, sort, search]);
 
   return (
@@ -107,15 +100,21 @@ export default function PersonsPage() {
       </div>
 
       {/* Person Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {persons.map((person) => (
-          <PersonCard key={person.id} person={person} />
-        ))}
-      </div>
-
-      {persons.length === 0 && (
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-48 bg-gray-800 rounded-xl animate-pulse" />
+          ))}
+        </div>
+      ) : persons.length === 0 ? (
         <div className="text-center py-12 text-gray-500">
           No persons found matching your criteria.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {persons.map((person) => (
+            <PersonCard key={person.id} person={person} />
+          ))}
         </div>
       )}
     </div>

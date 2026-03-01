@@ -3,6 +3,7 @@
 import logging
 
 from fastapi import APIRouter
+from fastapi.responses import JSONResponse
 
 from nile.config import settings
 
@@ -75,7 +76,10 @@ async def readiness():
         logger.warning("Health check: Solana RPC unreachable: %s", exc)
 
     status_code = 200 if overall == "ready" else 503
-    return {"status": overall, "checks": checks}, status_code
+    return JSONResponse(
+        status_code=status_code,
+        content={"status": overall, "checks": checks},
+    )
 
 
 @router.get("/health/metrics")
