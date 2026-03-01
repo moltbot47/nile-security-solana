@@ -156,7 +156,7 @@ class SolanaProgramAnalyzer:
             age_days=ecosystem.get("age_days", 0),
             team_identified=is_known,
             ecosystem_score=ecosystem.get("ecosystem_score", 0.0),
-            on_security_txt=False,  # TODO: check for security.txt
+            on_security_txt=ecosystem.get("has_security_txt", False),
         )
 
     def _assess_image(self, idl_analysis: dict) -> ImageInputs:
@@ -173,7 +173,7 @@ class SolanaProgramAnalyzer:
     def _assess_likeness(self, exploit_matches: list[dict], idl_analysis: dict) -> LikenessInputs:
         """Build Likeness dimension inputs from pattern matching."""
         return LikenessInputs(
-            static_analysis_findings=[],  # TODO: integrate Soteria/custom analyzer
+            static_analysis_findings=[],  # Soteria integration deferred (requires local binary)
             exploit_pattern_matches=exploit_matches,
             rug_pattern_similarity=0.0,
         )
@@ -188,7 +188,9 @@ class SolanaProgramAnalyzer:
             test_coverage_pct=0.0,  # Can't determine from on-chain
             avg_instruction_complexity=max(5.0, idl_analysis.get("instruction_count", 0) * 0.8),
             upgrade_authority_active=upgrade_active,
-            upgrade_authority_is_multisig=False,  # TODO: check if authority is a multisig
+            upgrade_authority_is_multisig=authority_info.get("is_multisig", False)
+            if authority_info
+            else False,
             has_timelock=not upgrade_active,  # Conservative: assume no timelock if upgradeable
             cpi_call_count=idl_analysis.get("unsafe_cpi_calls", 0),
         )

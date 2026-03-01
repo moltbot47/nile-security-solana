@@ -1,18 +1,18 @@
-"""Structured request/response logging middleware."""
+"""Structured request/response logging middleware using structlog."""
 
-import logging
 import time
 import uuid
 
+import structlog
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
 from starlette.responses import Response
 
-logger = logging.getLogger("nile.access")
+logger = structlog.get_logger("nile.access")
 
 
 class RequestLoggingMiddleware(BaseHTTPMiddleware):
-    """Logs every request with timing, status code, and request ID."""
+    """Logs every request with structured JSON fields: timing, status, request ID."""
 
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         request_id = request.headers.get("x-request-id") or str(uuid.uuid4())[:8]
@@ -29,12 +29,13 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
             return response
 
         logger.info(
-            "%s %s %d %.1fms [%s]",
-            request.method,
-            request.url.path,
-            response.status_code,
-            duration_ms,
-            request_id,
+            "http_request",
+            method=request.method,
+            path=request.url.path,
+            status=response.status_code,
+            duration_ms=round(duration_ms, 1),
+            request_id=request_id,
+            client=request.client.host if request.client else "unknown",
         )
 
         return response

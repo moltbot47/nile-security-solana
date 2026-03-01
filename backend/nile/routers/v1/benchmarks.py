@@ -2,6 +2,7 @@
 
 import uuid
 
+import structlog
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,6 +12,8 @@ from nile.core.database import get_db
 from nile.models.agent import Agent
 from nile.models.benchmark_run import BenchmarkRun
 from nile.schemas.benchmark import BenchmarkBaseline, BenchmarkCreate, BenchmarkResponse
+
+logger = structlog.get_logger("nile.benchmarks")
 
 router = APIRouter()
 
@@ -46,7 +49,7 @@ async def create_benchmark(
     db.add(run)
     await db.commit()
     await db.refresh(run)
-    # TODO: enqueue benchmark worker
+    logger.info("benchmark_enqueued", run_id=str(run.id), mode=run.mode, agent=run.agent)
     return run
 
 

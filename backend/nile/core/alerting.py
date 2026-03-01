@@ -1,14 +1,14 @@
 """Discord webhook alerting for critical system events."""
 
-import logging
 from datetime import UTC, datetime
 from enum import StrEnum
 
 import httpx
+import structlog
 
 from nile.config import settings
 
-logger = logging.getLogger("nile.alerting")
+logger = structlog.get_logger("nile.alerting")
 
 
 class AlertLevel(StrEnum):
