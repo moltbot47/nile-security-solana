@@ -9,6 +9,7 @@ from sqlalchemy.orm import selectinload
 
 from nile.core.auth import Agent, get_current_agent
 from nile.core.database import get_db
+from nile.core.exceptions import InvalidAddressError
 from nile.core.rate_limit import quote_limiter, trading_limiter
 from nile.models.portfolio import Portfolio
 from nile.models.soul_token import SoulToken
@@ -20,6 +21,7 @@ from nile.schemas.soul_token import (
     TradeRequest,
     TradeResponse,
 )
+from nile.services.chain_service import validate_solana_address
 from nile.services.risk_engine import is_circuit_breaker_active, run_risk_checks
 
 logger = logging.getLogger(__name__)
@@ -212,6 +214,8 @@ async def get_portfolio(
     db: AsyncSession = Depends(get_db),
 ) -> list[PortfolioItem]:
     """Get portfolio holdings for a wallet."""
+    if not validate_solana_address(wallet_address):
+        raise InvalidAddressError()
     query = (
         select(Portfolio)
         .where(Portfolio.wallet_address == wallet_address)

@@ -191,6 +191,13 @@ class TestExecuteSell:
 @pytest.mark.asyncio
 class TestPortfolio:
     async def test_empty_portfolio(self, client, db_session):
-        resp = await client.get("/api/v1/trading/portfolio?wallet_address=test123")
+        resp = await client.get(
+            "/api/v1/trading/portfolio"
+            "?wallet_address=TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        )
         assert resp.status_code == 200
         assert resp.json() == []
+
+    async def test_portfolio_invalid_address(self, client, db_session):
+        resp = await client.get("/api/v1/trading/portfolio?wallet_address=invalid")
+        assert resp.status_code == 400

@@ -2,13 +2,14 @@
 
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from nile.core.auth import Agent, get_current_agent
 from nile.core.database import get_db
+from nile.core.rate_limit import RateLimiter
 from nile.models.oracle_event import OracleEvent
 from nile.models.person import Person
 from nile.models.soul_token import SoulToken
@@ -25,14 +26,19 @@ from nile.schemas.person import (
 
 router = APIRouter()
 
+# 10 persons per minute per IP
+person_create_limiter = RateLimiter(max_requests=10, window_seconds=60)
+
 
 @router.post("", response_model=PersonResponse, status_code=201)
 async def create_person(
     req: PersonCreate,
+    request: Request,
     agent: Agent = Depends(get_current_agent),
     db: AsyncSession = Depends(get_db),
 ) -> PersonResponse:
     """Create a new person profile."""
+    person_create_limiter.check(request)
     existing = await db.execute(select(Person).where(Person.slug == req.slug))
     if existing.scalar_one_or_none():
         raise HTTPException(409, f"Person with slug '{req.slug}' already exists")

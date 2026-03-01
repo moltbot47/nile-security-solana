@@ -3,7 +3,7 @@
 import uuid
 from datetime import UTC, datetime
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,10 +16,16 @@ from nile.core.auth import (
 )
 from nile.core.database import get_db
 from nile.core.event_bus import publish_event
+from nile.core.rate_limit import RateLimiter
 from nile.models.agent import Agent
 from nile.models.agent_contribution import AgentContribution
 
 router = APIRouter()
+
+# 5 registrations per minute per IP
+register_limiter = RateLimiter(max_requests=5, window_seconds=60)
+# 60 heartbeats per minute per IP (1/sec is normal)
+heartbeat_limiter = RateLimiter(max_requests=60, window_seconds=60)
 
 
 # --- Schemas ---
@@ -96,8 +102,11 @@ class LeaderboardEntry(BaseModel):
 
 
 @router.post("/register", response_model=AgentRegisterResponse)
-async def register_agent(req: AgentRegisterRequest, db: AsyncSession = Depends(get_db)):
-    # Check for duplicate name
+async def register_agent(
+    req: AgentRegisterRequest, request: Request, db: AsyncSession = Depends(get_db)
+):
+    """Register a new agent and receive API key + JWT token."""
+    register_limiter.check(request)
     existing = await db.execute(select(Agent).where(Agent.name == req.name))
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=409, detail="Agent name already taken")
@@ -144,6 +153,7 @@ async def list_agents(
     capability: str | None = None,
     db: AsyncSession = Depends(get_db),
 ):
+    """List agents, optionally filtered by status or capability."""
     query = select(Agent)
     if status:
         query = query.where(Agent.status == status)
@@ -263,9 +273,12 @@ async def update_agent(
 @router.post("/{agent_id}/heartbeat")
 async def heartbeat(
     agent_id: uuid.UUID,
+    request: Request,
     current_agent: Agent = Depends(get_current_agent),
     db: AsyncSession = Depends(get_db),
 ):
+    """Report agent liveness. Expected every 30s."""
+    heartbeat_limiter.check(request)
     if str(current_agent.id) != str(agent_id):
         raise HTTPException(status_code=403, detail="Can only heartbeat your own agent")
 

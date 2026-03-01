@@ -2,17 +2,22 @@
 
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from nile.core.auth import Agent, get_current_agent
 from nile.core.database import get_db
+from nile.core.rate_limit import RateLimiter
 from nile.models.oracle_event import OracleEvent
 from nile.schemas.person import OracleEventResponse
 
 router = APIRouter()
+
+# 10 reports/min, 30 votes/min per IP
+report_limiter = RateLimiter(max_requests=10, window_seconds=60)
+vote_limiter = RateLimiter(max_requests=30, window_seconds=60)
 
 
 class OracleReportRequest(BaseModel):
@@ -34,10 +39,12 @@ class OracleVoteRequest(BaseModel):
 @router.post("/reports", response_model=OracleEventResponse, status_code=201)
 async def submit_report(
     req: OracleReportRequest,
+    request: Request,
     agent: Agent = Depends(get_current_agent),
     db: AsyncSession = Depends(get_db),
 ) -> OracleEventResponse:
     """Submit a new oracle report about a person."""
+    report_limiter.check(request)
     event = OracleEvent(
         person_id=req.person_id,
         event_type=req.event_type,
@@ -65,10 +72,12 @@ async def submit_report(
 async def vote_on_report(
     report_id: uuid.UUID,
     req: OracleVoteRequest,
+    request: Request,
     agent: Agent = Depends(get_current_agent),
     db: AsyncSession = Depends(get_db),
 ) -> OracleEventResponse:
     """Vote on a pending oracle report."""
+    vote_limiter.check(request)
     query = select(OracleEvent).where(OracleEvent.id == report_id)
     result = await db.execute(query)
     event = result.scalar_one_or_none()

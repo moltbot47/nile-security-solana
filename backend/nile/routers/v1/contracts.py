@@ -2,12 +2,13 @@
 
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from nile.core.auth import get_current_agent
 from nile.core.database import get_db
+from nile.core.rate_limit import RateLimiter
 from nile.models.agent import Agent
 from nile.models.contract import Contract
 from nile.models.nile_score import NileScore
@@ -16,9 +17,13 @@ from nile.schemas.contract import ContractCreate, ContractResponse, NileScoreRes
 
 router = APIRouter()
 
+# 10 contracts per minute per IP
+contract_create_limiter = RateLimiter(max_requests=10, window_seconds=60)
+
 
 @router.get("", response_model=list[ContractResponse])
 async def list_contracts(skip: int = 0, limit: int = 50, db: AsyncSession = Depends(get_db)):
+    """List contracts with pagination."""
     result = await db.execute(select(Contract).offset(skip).limit(limit))
     return result.scalars().all()
 
@@ -26,9 +31,12 @@ async def list_contracts(skip: int = 0, limit: int = 50, db: AsyncSession = Depe
 @router.post("", response_model=ContractResponse, status_code=201)
 async def create_contract(
     data: ContractCreate,
+    request: Request,
     agent: Agent = Depends(get_current_agent),
     db: AsyncSession = Depends(get_db),
 ):
+    """Register a new smart contract for NILE scoring."""
+    contract_create_limiter.check(request)
     contract = Contract(
         address=data.address,
         name=data.name,
@@ -46,6 +54,7 @@ async def create_contract(
 
 @router.get("/{contract_id}", response_model=ContractResponse)
 async def get_contract(contract_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+    """Get a contract by ID."""
     result = await db.execute(select(Contract).where(Contract.id == contract_id))
     contract = result.scalar_one_or_none()
     if not contract:
@@ -57,6 +66,7 @@ async def get_contract(contract_id: uuid.UUID, db: AsyncSession = Depends(get_db
 async def get_nile_history(
     contract_id: uuid.UUID, limit: int = 50, db: AsyncSession = Depends(get_db)
 ):
+    """Get NILE score history for a contract."""
     result = await db.execute(
         select(NileScore)
         .where(NileScore.contract_id == contract_id)
@@ -68,6 +78,7 @@ async def get_nile_history(
 
 @router.get("/{contract_id}/vulnerabilities")
 async def get_contract_vulnerabilities(contract_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+    """Get detected vulnerabilities for a contract."""
     result = await db.execute(
         select(Vulnerability)
         .where(Vulnerability.contract_id == contract_id)

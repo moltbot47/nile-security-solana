@@ -101,6 +101,7 @@ async def graduating_soon(
         select(SoulToken)
         .options(selectinload(SoulToken.person))
         .where(SoulToken.phase == "bonding")
+        .where(SoulToken.graduation_threshold_sol > 0)
         .order_by((SoulToken.reserve_balance_sol / SoulToken.graduation_threshold_sol).desc())
         .limit(limit)
     )

@@ -42,15 +42,6 @@ class Settings(BaseSettings):
     # Pyth Oracle (SOL/USD price feed)
     pyth_sol_usd_feed: str = "J83w4HKfqxwcq3BEMMkPFSppX3gqekLyLJBexebFVkix"  # Pyth SOL/USD devnet
 
-    # Legacy EVM fields (kept for dual-chain future)
-    chain_rpc_url: str = ""
-    chain_id: int = 0
-    factory_address: str = ""
-    router_address: str = ""
-    treasury_address: str = ""
-    oracle_address: str = ""
-    eth_price_feed: str = ""
-
     model_config = {"env_file": ".env", "env_prefix": "NILE_"}
 
 

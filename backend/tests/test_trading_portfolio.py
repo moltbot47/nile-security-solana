@@ -82,9 +82,16 @@ class TestPortfolioEndpoint:
         assert abs(item["unrealized_pnl_sol"] - 5.0) < 0.01
 
     async def test_portfolio_empty(self, client, db_session):
-        resp = await client.get("/api/v1/trading/portfolio?wallet_address=NONEXISTENT")
+        resp = await client.get(
+            "/api/v1/trading/portfolio"
+            "?wallet_address=TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        )
         assert resp.status_code == 200
         assert resp.json() == []
+
+    async def test_portfolio_invalid_address(self, client, db_session):
+        resp = await client.get("/api/v1/trading/portfolio?wallet_address=NONEXISTENT")
+        assert resp.status_code == 400
 
 
 @pytest.mark.asyncio
