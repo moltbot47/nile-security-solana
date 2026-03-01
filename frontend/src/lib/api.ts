@@ -18,6 +18,7 @@ import type {
   PriceCandle,
   QuoteResponse,
   RiskSummary,
+  ScanJob,
   SolanaScanResult,
   SoulToken,
   SoulTokenListItem,
@@ -113,6 +114,13 @@ export const api = {
       fetchJSON<RiskSummary>(`/soul-tokens/${tokenId}/risk`),
     circuitBreakers: () =>
       fetchJSON<{ active_breakers: Record<string, string> }>("/soul-tokens/risk/circuit-breakers"),
+  },
+  scans: {
+    list: (status?: string, limit = 50) => {
+      const qs = new URLSearchParams({ limit: String(limit) });
+      if (status) qs.set("status", status);
+      return fetchJSON<ScanJob[]>(`/scans?${qs}`);
+    },
   },
   scan: {
     solana: (address: string) =>

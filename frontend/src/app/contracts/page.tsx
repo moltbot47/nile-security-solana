@@ -1,17 +1,22 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { NileScoreGauge } from "@/components/dashboard/NileScoreGauge";
-
-const DEMO_CONTRACTS = [
-  { id: "1", name: "Noya Vault", chain: "Ethereum", score: 82, vulns: 2, verified: true },
-  { id: "2", name: "Tempo Bridge", chain: "Tempo", score: 65, vulns: 5, verified: true },
-  { id: "3", name: "DeFi Pool v2", chain: "Ethereum", score: 91, vulns: 0, verified: true },
-  { id: "4", name: "Oracle Aggregator", chain: "Ethereum", score: 45, vulns: 8, verified: false },
-  { id: "5", name: "Lending Protocol", chain: "Arbitrum", score: 73, vulns: 3, verified: true },
-  { id: "6", name: "Staking Rewards", chain: "Ethereum", score: 88, vulns: 1, verified: true },
-];
+import { api } from "@/lib/api";
+import type { Contract } from "@/lib/types";
 
 export default function ContractsPage() {
+  const [contracts, setContracts] = useState<Contract[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api.contracts
+      .list()
+      .then(setContracts)
+      .catch(() => setContracts([]))
+      .finally(() => setLoading(false));
+  }, []);
+
   return (
     <div className="space-y-6">
       <div>
@@ -21,30 +26,48 @@ export default function ContractsPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {DEMO_CONTRACTS.map((c) => (
-          <div
-            key={c.id}
-            className="rounded-xl border border-gray-800 p-6 hover:border-nile-500/30 transition-colors cursor-pointer"
-          >
-            <div className="flex justify-between items-start mb-4">
-              <div>
-                <h3 className="font-semibold text-lg">{c.name}</h3>
-                <p className="text-sm text-gray-400">{c.chain}</p>
+      {loading ? (
+        <div className="text-center py-12 text-gray-500">
+          Loading contracts...
+        </div>
+      ) : contracts.length === 0 ? (
+        <div className="text-center py-12 text-gray-500">
+          <p className="text-lg mb-2">No contracts monitored yet</p>
+          <p className="text-sm">
+            Submit a contract address to begin security monitoring
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {contracts.map((c) => (
+            <div
+              key={c.id}
+              className="rounded-xl border border-gray-800 p-6 hover:border-nile-500/30 transition-colors cursor-pointer"
+            >
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h3 className="font-semibold text-lg">{c.name}</h3>
+                  <p className="text-sm text-gray-400">{c.chain}</p>
+                </div>
+                {c.latest_nile_score && (
+                  <NileScoreGauge
+                    score={c.latest_nile_score.total_score}
+                    size="sm"
+                  />
+                )}
               </div>
-              <NileScoreGauge score={c.score} size="sm" />
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400 font-mono text-xs truncate max-w-[200px]">
+                  {c.address}
+                </span>
+                {c.is_verified && (
+                  <span className="text-nile-400 text-xs">Verified</span>
+                )}
+              </div>
             </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-400">
-                {c.vulns} open vuln{c.vulns !== 1 ? "s" : ""}
-              </span>
-              {c.verified && (
-                <span className="text-nile-400 text-xs">Verified</span>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

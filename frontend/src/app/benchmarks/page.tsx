@@ -1,36 +1,55 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { KPICard } from "@/components/dashboard/KPICard";
-
-const BASELINES = [
-  { agent: "GPT-5.3-Codex", mode: "exploit", score: 72.2 },
-  { agent: "GPT-5", mode: "exploit", score: 31.9 },
-  { agent: "Claude Opus 4.6", mode: "detect", score: 37824, unit: "$" },
-];
+import { api } from "@/lib/api";
+import type { BenchmarkBaseline } from "@/lib/types";
 
 export default function BenchmarksPage() {
+  const [baselines, setBaselines] = useState<BenchmarkBaseline[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api.benchmarks
+      .baselines()
+      .then(setBaselines)
+      .catch(() => setBaselines([]))
+      .finally(() => setLoading(false));
+  }, []);
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">EVMbench Benchmarks</h1>
         <p className="text-gray-400 mt-1">
-          Benchmark results against published EVMbench baselines (120 vulnerabilities, 40 audits)
+          Benchmark results against published EVMbench baselines (120
+          vulnerabilities, 40 audits)
         </p>
       </div>
 
       <div className="rounded-xl border border-gray-800 p-6">
         <h2 className="text-lg font-semibold mb-4">Published Baselines</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {BASELINES.map((b) => (
-            <KPICard
-              key={`${b.agent}-${b.mode}`}
-              title={`${b.agent} (${b.mode})`}
-              value={b.unit === "$" ? `$${(b.score / 1000).toFixed(1)}K` : `${b.score}%`}
-              subtitle="Published EVMbench result"
-              color="blue"
-            />
-          ))}
-        </div>
+        {loading ? (
+          <div className="text-center py-8 text-gray-500">
+            Loading baselines...
+          </div>
+        ) : baselines.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            No baselines available
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {baselines.map((b) => (
+              <KPICard
+                key={`${b.agent}-${b.mode}`}
+                title={`${b.agent} (${b.mode})`}
+                value={`${b.score_pct}%`}
+                subtitle={`Source: ${b.source}`}
+                color="blue"
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="rounded-xl border border-gray-800 p-6">
@@ -47,12 +66,15 @@ export default function BenchmarksPage() {
       </div>
 
       <div className="rounded-xl border border-gray-800 p-6">
-        <h2 className="text-lg font-semibold mb-4">Three Evaluation Modes</h2>
+        <h2 className="text-lg font-semibold mb-4">
+          Three Evaluation Modes
+        </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="p-4 rounded-lg bg-gray-900">
             <h3 className="font-medium text-nile-400 mb-2">Detect</h3>
             <p className="text-sm text-gray-400">
-              Audit smart contracts and score on recall of ground-truth vulnerabilities
+              Audit smart contracts and score on recall of ground-truth
+              vulnerabilities
             </p>
           </div>
           <div className="p-4 rounded-lg bg-gray-900">
@@ -62,9 +84,12 @@ export default function BenchmarksPage() {
             </p>
           </div>
           <div className="p-4 rounded-lg bg-gray-900">
-            <h3 className="font-medium text-security-danger mb-2">Exploit</h3>
+            <h3 className="font-medium text-security-danger mb-2">
+              Exploit
+            </h3>
             <p className="text-sm text-gray-400">
-              Execute end-to-end fund-draining attacks in sandboxed environments
+              Execute end-to-end fund-draining attacks in sandboxed
+              environments
             </p>
           </div>
         </div>
