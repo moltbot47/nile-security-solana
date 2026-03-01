@@ -83,7 +83,9 @@ async def list_persons(
     if verification:
         query = query.where(Person.verification_level == verification)
     if search:
-        query = query.where(Person.display_name.ilike(f"%{search}%"))
+        # Escape LIKE wildcards to prevent pattern injection
+        safe = search.replace("%", r"\%").replace("_", r"\_")
+        query = query.where(Person.display_name.ilike(f"%{safe}%"))
 
     if sort == "score":
         query = query.order_by(Person.nile_total_score.desc())
