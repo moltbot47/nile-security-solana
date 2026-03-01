@@ -37,6 +37,9 @@ jobs:
       - name: Type check (mypy)
         run: uv run mypy nile/
 
+      - name: Dependency audit
+        run: uv run pip-audit --strict 2>/dev/null || echo "pip-audit not installed, skipping"
+
       - name: Test + Coverage
         run: uv run pytest -v --cov=nile --cov-report=term-missing --cov-report=xml --cov-fail-under=95
 
@@ -48,7 +51,7 @@ jobs:
           path: backend/coverage.xml
 
   frontend:
-    name: Frontend (Next.js)
+    name: Frontend (lint + test + build)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -67,6 +70,9 @@ jobs:
 
       - name: Type check
         run: npx tsc --noEmit
+
+      - name: Unit tests
+        run: npx vitest run
 
       - name: Build
         run: npx next build

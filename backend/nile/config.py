@@ -56,14 +56,9 @@ class Settings(BaseSettings):
 
 settings = Settings()
 
-# Warn if using default JWT secret in non-development environments
+# Fail hard if using default JWT secret outside development
 if settings.jwt_secret == "nile-dev-secret-change-me" and settings.env != "development":  # noqa: S105
-    import logging
-    import warnings
-
-    _msg = (
-        "SECURITY WARNING: Using default JWT secret in %s environment. "
-        "Set NILE_JWT_SECRET to a strong random value."
+    raise RuntimeError(
+        f"FATAL: Default JWT secret in '{settings.env}' environment. "
+        "Set NILE_JWT_SECRET to a strong random value before starting."
     )
-    logging.getLogger(__name__).critical(_msg, settings.env)
-    warnings.warn(_msg % settings.env, stacklevel=1)

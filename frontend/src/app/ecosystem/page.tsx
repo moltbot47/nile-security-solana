@@ -45,11 +45,14 @@ export default function EcosystemPage() {
   const [hoveredNode, setHoveredNode] = useState<GraphNode | null>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const animationRef = useRef<number>(0);
+  const [loading, setLoading] = useState(true);
 
   // Load data
   useEffect(() => {
-    api.agents.list("active").then(setAgents).catch(() => {});
-    api.events.history(100).then(setEvents).catch(() => {});
+    Promise.all([
+      api.agents.list("active").then(setAgents).catch(() => {}),
+      api.events.history(100).then(setEvents).catch(() => {}),
+    ]).finally(() => setLoading(false));
   }, []);
 
   // Build graph from agents
@@ -239,6 +242,13 @@ export default function EcosystemPage() {
       </div>
 
       {/* Network Graph */}
+      {loading ? (
+        <div className="h-[600px] bg-gray-800 rounded-xl animate-pulse" />
+      ) : nodes.length === 0 ? (
+        <div className="h-[600px] rounded-xl border border-gray-800 bg-[#050510] flex items-center justify-center">
+          <p className="text-gray-500">No agents connected yet.</p>
+        </div>
+      ) : (
       <div className="relative rounded-xl border border-gray-800 overflow-hidden bg-[#050510]">
         <canvas
           ref={canvasRef}
@@ -268,6 +278,7 @@ export default function EcosystemPage() {
           </div>
         )}
       </div>
+      )}
 
       {/* Activity Feed */}
       <div className="rounded-xl border border-gray-800 p-6">

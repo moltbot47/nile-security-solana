@@ -18,11 +18,14 @@ export default function MarketPage() {
   const [tokens, setTokens] = useState<SoulTokenListItem[]>([]);
   const [overview, setOverview] = useState<MarketOverview | null>(null);
   const [sort, setSort] = useState("market_cap");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.persons.trending().then(setTrending).catch(() => {});
-    api.persons.list({ sort: "newest", limit: 6 }).then(setNewListings).catch(() => {});
-    api.soulTokens.marketOverview().then(setOverview).catch(() => {});
+    Promise.all([
+      api.persons.trending().then(setTrending).catch(() => {}),
+      api.persons.list({ sort: "newest", limit: 6 }).then(setNewListings).catch(() => {}),
+      api.soulTokens.marketOverview().then(setOverview).catch(() => {}),
+    ]).finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
@@ -65,11 +68,21 @@ export default function MarketPage() {
       {/* Trending */}
       <div>
         <h2 className="text-xl font-semibold mb-3">Trending</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {trending.map((p) => (
-            <PersonCard key={p.id} person={p} />
-          ))}
-        </div>
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-48 bg-gray-800 rounded-xl animate-pulse" />
+            ))}
+          </div>
+        ) : trending.length === 0 ? (
+          <p className="text-gray-500 text-sm py-4">No trending persons yet.</p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {trending.map((p) => (
+              <PersonCard key={p.id} person={p} />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Token Table */}
