@@ -8,12 +8,13 @@ import type { Contract } from "@/lib/types";
 export default function ContractsPage() {
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     api.contracts
       .list()
       .then(setContracts)
-      .catch(() => setContracts([]))
+      .catch(() => setError("Failed to load contracts"))
       .finally(() => setLoading(false));
   }, []);
 
@@ -29,6 +30,10 @@ export default function ContractsPage() {
       {loading ? (
         <div className="text-center py-12 text-gray-500">
           Loading contracts...
+        </div>
+      ) : error ? (
+        <div className="text-center py-12 text-red-400">
+          {error}
         </div>
       ) : contracts.length === 0 ? (
         <div className="text-center py-12 text-gray-500">

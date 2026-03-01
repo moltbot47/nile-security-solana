@@ -78,6 +78,9 @@ async def get_nile_history(
     db: AsyncSession = Depends(get_db),
 ):
     """Get NILE score history for a contract."""
+    exists = await db.execute(select(Contract.id).where(Contract.id == contract_id))
+    if not exists.scalar_one_or_none():
+        raise HTTPException(status_code=404, detail="Contract not found")
     result = await db.execute(
         select(NileScore)
         .where(NileScore.contract_id == contract_id)
@@ -94,6 +97,9 @@ async def get_contract_vulnerabilities(
     db: AsyncSession = Depends(get_db),
 ):
     """Get detected vulnerabilities for a contract."""
+    exists = await db.execute(select(Contract.id).where(Contract.id == contract_id))
+    if not exists.scalar_one_or_none():
+        raise HTTPException(status_code=404, detail="Contract not found")
     result = await db.execute(
         select(Vulnerability)
         .where(Vulnerability.contract_id == contract_id)

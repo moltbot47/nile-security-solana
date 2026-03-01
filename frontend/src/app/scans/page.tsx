@@ -19,13 +19,15 @@ export default function ScansPage() {
   const [scans, setScans] = useState<ScanJob[]>([]);
   const [statusFilter, setStatusFilter] = useState("");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setLoading(true);
+    setError(null);
     api.scans
       .list(statusFilter || undefined)
       .then(setScans)
-      .catch(() => setScans([]))
+      .catch(() => setError("Failed to load scans"))
       .finally(() => setLoading(false));
   }, [statusFilter]);
 
@@ -70,6 +72,12 @@ export default function ScansPage() {
               <tr>
                 <td colSpan={4} className="py-8 text-center text-gray-500">
                   Loading scans...
+                </td>
+              </tr>
+            ) : error ? (
+              <tr>
+                <td colSpan={4} className="py-8 text-center text-red-400">
+                  {error}
                 </td>
               </tr>
             ) : scans.length === 0 ? (

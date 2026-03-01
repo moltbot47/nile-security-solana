@@ -99,6 +99,20 @@ async def test_contract_solana_address_accepted(client, auth_headers):
     assert response.json()["address"] == "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
 
 
+async def test_get_nile_history_not_found(client):
+    """GET /contracts/{id}/nile-history returns 404 for non-existent contract."""
+    fake_id = str(uuid.uuid4())
+    response = await client.get(f"/api/v1/contracts/{fake_id}/nile-history")
+    assert response.status_code == 404
+
+
+async def test_get_vulnerabilities_not_found(client):
+    """GET /contracts/{id}/vulnerabilities returns 404 for non-existent contract."""
+    fake_id = str(uuid.uuid4())
+    response = await client.get(f"/api/v1/contracts/{fake_id}/vulnerabilities")
+    assert response.status_code == 404
+
+
 async def test_contract_pagination(client, auth_headers, sample_contract_data):
     """GET /contracts supports skip and limit pagination."""
     # Create 3 contracts

@@ -16,13 +16,14 @@ const CAPABILITY_BADGE: Record<string, string> = {
 export default function AgentsPage() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<string>("");
 
   useEffect(() => {
     api.agents
       .leaderboard()
       .then(setLeaderboard)
-      .catch(() => {})
+      .catch(() => setError("Failed to load agent leaderboard"))
       .finally(() => setLoading(false));
   }, []);
 
@@ -62,6 +63,10 @@ export default function AgentsPage() {
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="h-12 bg-gray-800 rounded-lg animate-pulse" />
           ))}
+        </div>
+      ) : error ? (
+        <div className="text-center py-12 text-red-400">
+          {error}
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-12 text-gray-500">
