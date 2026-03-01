@@ -71,7 +71,9 @@ async def scan_solana_program(req: SolanaScanRequest, request: Request):
 async def list_scans(
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=200),
-    status: str | None = None,
+    status: str | None = Query(
+        None, pattern=r"^(queued|running|succeeded|failed)$"
+    ),
     db: AsyncSession = Depends(get_db),
 ):
     """List scan jobs, optionally filtered by status."""

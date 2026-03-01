@@ -149,8 +149,8 @@ async def register_agent(
 
 @router.get("", response_model=list[AgentResponse])
 async def list_agents(
-    status: str | None = None,
-    capability: str | None = None,
+    status: str | None = Query(None, pattern=r"^(active|inactive|suspended)$"),
+    capability: str | None = Query(None, pattern=r"^(detect|patch|exploit)$"),
     limit: int = Query(50, ge=1, le=200),
     db: AsyncSession = Depends(get_db),
 ):

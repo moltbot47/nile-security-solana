@@ -119,7 +119,7 @@ async def vote_on_report(
 
 @router.get("/reports", response_model=list[OracleEventResponse])
 async def list_reports(
-    status: str | None = None,
+    status: str | None = Query(None, pattern=r"^(pending|confirmed|rejected)$"),
     limit: int = Query(50, ge=1, le=200),
     db: AsyncSession = Depends(get_db),
 ) -> list[OracleEventResponse]:

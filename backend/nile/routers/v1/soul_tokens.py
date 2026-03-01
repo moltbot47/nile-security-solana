@@ -206,11 +206,14 @@ async def token_risk(
 @router.get("/{token_id}/candles", response_model=list[PriceCandleResponse])
 async def get_candles(
     token_id: uuid.UUID,
-    interval: str = "1h",
+    interval: str = Query("1h", pattern=r"^(1m|5m|15m|1h|4h|1d)$"),
     limit: int = Query(100, ge=1, le=1000),
     db: AsyncSession = Depends(get_db),
 ) -> list[PriceCandleResponse]:
     """Get OHLCV candles for a soul token."""
+    exists = await db.execute(select(SoulToken.id).where(SoulToken.id == token_id))
+    if not exists.scalar_one_or_none():
+        raise HTTPException(404, "Soul token not found")
     query = (
         select(PriceCandle)
         .where(PriceCandle.soul_token_id == token_id, PriceCandle.interval == interval)

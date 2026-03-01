@@ -2,16 +2,17 @@
 
 import uuid
 from datetime import datetime
+from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class ScanCreate(BaseModel):
     contract_id: uuid.UUID
-    mode: str  # detect, patch, exploit
-    agent: str = "claude-opus-4-6"
+    mode: Literal["detect", "patch", "exploit"]
+    agent: str = Field(default="claude-opus-4-6", min_length=1, max_length=64)
     config: dict = {}
-    hint_level: str = "none"
+    hint_level: Literal["none", "basic", "advanced"] = "none"
 
 
 class ScanResponse(BaseModel):

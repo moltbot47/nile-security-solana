@@ -85,3 +85,66 @@ class TestTradeAmountBounds:
             },
         )
         assert resp.status_code == 422
+
+
+@pytest.mark.asyncio
+class TestEnumFilterValidation:
+    """Verify status/mode filter params reject invalid values."""
+
+    @pytest.mark.parametrize(
+        "url",
+        [
+            "/api/v1/agents?status=bogus",
+            "/api/v1/agents?capability=bogus",
+            "/api/v1/scans?status=bogus",
+            "/api/v1/oracle/reports?status=bogus",
+        ],
+    )
+    async def test_invalid_filter_rejected(self, client, db_session, url):
+        """Endpoints should return 422 for invalid filter values."""
+        resp = await client.get(url)
+        assert resp.status_code == 422, f"Expected 422 for {url}, got {resp.status_code}"
+
+    @pytest.mark.parametrize(
+        "url",
+        [
+            "/api/v1/agents?status=active",
+            "/api/v1/agents?capability=detect",
+            "/api/v1/scans?status=queued",
+            "/api/v1/scans?status=succeeded",
+            "/api/v1/oracle/reports?status=pending",
+            "/api/v1/oracle/reports?status=confirmed",
+        ],
+    )
+    async def test_valid_filter_accepted(self, client, db_session, url):
+        """Endpoints should return 200 for valid filter values."""
+        resp = await client.get(url)
+        assert resp.status_code == 200, f"Expected 200 for {url}, got {resp.status_code}"
+
+
+@pytest.mark.asyncio
+class TestScanModeValidation:
+    """Verify scan create rejects invalid modes."""
+
+    async def test_invalid_scan_mode_rejected(self, client, db_session, auth_headers):
+        resp = await client.post(
+            "/api/v1/scans",
+            json={
+                "contract_id": "00000000-0000-0000-0000-000000000001",
+                "mode": "invalid_mode",
+            },
+            headers=auth_headers,
+        )
+        assert resp.status_code == 422
+
+    async def test_invalid_hint_level_rejected(self, client, db_session, auth_headers):
+        resp = await client.post(
+            "/api/v1/scans",
+            json={
+                "contract_id": "00000000-0000-0000-0000-000000000001",
+                "mode": "detect",
+                "hint_level": "extreme",
+            },
+            headers=auth_headers,
+        )
+        assert resp.status_code == 422
