@@ -3,9 +3,17 @@
 import uuid
 
 
-async def test_create_contract(client, sample_contract_data):
-    """POST /contracts creates a new contract and returns it."""
+async def test_create_contract_unauthenticated(client, sample_contract_data):
+    """POST /contracts without auth returns 401."""
     response = await client.post("/api/v1/contracts", json=sample_contract_data)
+    assert response.status_code == 401
+
+
+async def test_create_contract(client, auth_headers, sample_contract_data):
+    """POST /contracts creates a new contract and returns it."""
+    response = await client.post(
+        "/api/v1/contracts", json=sample_contract_data, headers=auth_headers
+    )
     assert response.status_code == 201
     data = response.json()
     assert data["name"] == sample_contract_data["name"]
@@ -21,9 +29,11 @@ async def test_list_contracts_empty(client):
     assert response.json() == []
 
 
-async def test_list_contracts_with_data(client, sample_contract_data):
+async def test_list_contracts_with_data(client, auth_headers, sample_contract_data):
     """GET /contracts returns contracts after creation."""
-    await client.post("/api/v1/contracts", json=sample_contract_data)
+    await client.post(
+        "/api/v1/contracts", json=sample_contract_data, headers=auth_headers
+    )
     response = await client.get("/api/v1/contracts")
     assert response.status_code == 200
     data = response.json()
@@ -31,9 +41,11 @@ async def test_list_contracts_with_data(client, sample_contract_data):
     assert data[0]["name"] == sample_contract_data["name"]
 
 
-async def test_get_contract_by_id(client, sample_contract_data):
+async def test_get_contract_by_id(client, auth_headers, sample_contract_data):
     """GET /contracts/{id} returns the correct contract."""
-    create_resp = await client.post("/api/v1/contracts", json=sample_contract_data)
+    create_resp = await client.post(
+        "/api/v1/contracts", json=sample_contract_data, headers=auth_headers
+    )
     contract_id = create_resp.json()["id"]
 
     response = await client.get(f"/api/v1/contracts/{contract_id}")
@@ -48,9 +60,11 @@ async def test_get_contract_not_found(client):
     assert response.status_code == 404
 
 
-async def test_get_nile_history_empty(client, sample_contract_data):
+async def test_get_nile_history_empty(client, auth_headers, sample_contract_data):
     """GET /contracts/{id}/nile-history returns empty list when no scores exist."""
-    create_resp = await client.post("/api/v1/contracts", json=sample_contract_data)
+    create_resp = await client.post(
+        "/api/v1/contracts", json=sample_contract_data, headers=auth_headers
+    )
     contract_id = create_resp.json()["id"]
 
     response = await client.get(f"/api/v1/contracts/{contract_id}/nile-history")
@@ -58,9 +72,11 @@ async def test_get_nile_history_empty(client, sample_contract_data):
     assert response.json() == []
 
 
-async def test_get_vulnerabilities_empty(client, sample_contract_data):
+async def test_get_vulnerabilities_empty(client, auth_headers, sample_contract_data):
     """GET /contracts/{id}/vulnerabilities returns empty when none reported."""
-    create_resp = await client.post("/api/v1/contracts", json=sample_contract_data)
+    create_resp = await client.post(
+        "/api/v1/contracts", json=sample_contract_data, headers=auth_headers
+    )
     contract_id = create_resp.json()["id"]
 
     response = await client.get(f"/api/v1/contracts/{contract_id}/vulnerabilities")
@@ -68,7 +84,7 @@ async def test_get_vulnerabilities_empty(client, sample_contract_data):
     assert response.json() == []
 
 
-async def test_contract_solana_address_accepted(client):
+async def test_contract_solana_address_accepted(client, auth_headers):
     """Contract with valid Solana address (44 chars) is accepted."""
     response = await client.post(
         "/api/v1/contracts",
@@ -77,17 +93,18 @@ async def test_contract_solana_address_accepted(client):
             "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
             "chain": "solana",
         },
+        headers=auth_headers,
     )
     assert response.status_code == 201
     assert response.json()["address"] == "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
 
 
-async def test_contract_pagination(client, sample_contract_data):
+async def test_contract_pagination(client, auth_headers, sample_contract_data):
     """GET /contracts supports skip and limit pagination."""
     # Create 3 contracts
     for i in range(3):
         data = {**sample_contract_data, "name": f"Contract {i}"}
-        await client.post("/api/v1/contracts", json=data)
+        await client.post("/api/v1/contracts", json=data, headers=auth_headers)
 
     # Paginate
     response = await client.get("/api/v1/contracts?skip=0&limit=2")

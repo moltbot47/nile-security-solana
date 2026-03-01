@@ -6,7 +6,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from nile.core.auth import get_current_agent
 from nile.core.database import get_db
+from nile.models.agent import Agent
 from nile.models.benchmark_run import BenchmarkRun
 from nile.schemas.benchmark import BenchmarkBaseline, BenchmarkCreate, BenchmarkResponse
 
@@ -30,7 +32,11 @@ async def list_benchmarks(skip: int = 0, limit: int = 50, db: AsyncSession = Dep
 
 
 @router.post("/run", response_model=BenchmarkResponse, status_code=201)
-async def create_benchmark(data: BenchmarkCreate, db: AsyncSession = Depends(get_db)):
+async def create_benchmark(
+    data: BenchmarkCreate,
+    agent: Agent = Depends(get_current_agent),
+    db: AsyncSession = Depends(get_db),
+):
     run = BenchmarkRun(
         split=data.split,
         mode=data.mode,

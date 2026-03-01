@@ -6,9 +6,11 @@ from fastapi import APIRouter, Depends, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from nile.core.auth import get_current_agent
 from nile.core.database import get_db
 from nile.core.exceptions import AnalysisError, InvalidAddressError, NotFoundError
 from nile.core.rate_limit import RateLimiter
+from nile.models.agent import Agent
 from nile.models.scan_job import ScanJob
 from nile.schemas.scan import ScanCreate, ScanResponse
 from nile.schemas.solana_scan import (
@@ -80,7 +82,11 @@ async def list_scans(
 
 
 @router.post("", response_model=ScanResponse, status_code=201)
-async def create_scan(data: ScanCreate, db: AsyncSession = Depends(get_db)):
+async def create_scan(
+    data: ScanCreate,
+    agent: Agent = Depends(get_current_agent),
+    db: AsyncSession = Depends(get_db),
+):
     scan = ScanJob(
         contract_id=data.contract_id,
         mode=data.mode,

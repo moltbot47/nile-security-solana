@@ -37,7 +37,7 @@ class TestListScans:
 
 @pytest.mark.asyncio
 class TestCreateScan:
-    async def test_create_scan(self, client, db_session):
+    async def test_create_scan_unauthenticated(self, client, db_session):
         contract = Contract(name="Test", chain="solana")
         db_session.add(contract)
         await db_session.flush()
@@ -49,6 +49,22 @@ class TestCreateScan:
                 "mode": "detect",
                 "agent": "test-agent",
             },
+        )
+        assert resp.status_code == 401
+
+    async def test_create_scan(self, client, auth_headers, db_session):
+        contract = Contract(name="Test", chain="solana")
+        db_session.add(contract)
+        await db_session.flush()
+
+        resp = await client.post(
+            "/api/v1/scans",
+            json={
+                "contract_id": str(contract.id),
+                "mode": "detect",
+                "agent": "test-agent",
+            },
+            headers=auth_headers,
         )
         assert resp.status_code == 201
 

@@ -93,6 +93,7 @@ class TestVoteOnReportExtended:
     async def test_vote_reject(self, client, db_session, oracle_setup):
         """Rejection vote increments rejections."""
         person, _, token = oracle_setup
+        headers = {"Authorization": f"Bearer {token}"}
         event = OracleEvent(
             person_id=person.id,
             event_type="news_positive",
@@ -111,6 +112,7 @@ class TestVoteOnReportExtended:
         resp = await client.post(
             f"/api/v1/oracle/reports/{event.id}/vote",
             json={"agent_id": "voter-1", "approve": False, "impact_score": 20},
+            headers=headers,
         )
         assert resp.status_code == 200
         data = resp.json()
@@ -119,6 +121,7 @@ class TestVoteOnReportExtended:
     async def test_vote_on_confirmed_report(self, client, db_session, oracle_setup):
         """Voting on a confirmed report returns 409."""
         person, _, token = oracle_setup
+        headers = {"Authorization": f"Bearer {token}"}
         event = OracleEvent(
             person_id=person.id,
             event_type="sports_win",
@@ -136,12 +139,14 @@ class TestVoteOnReportExtended:
         resp = await client.post(
             f"/api/v1/oracle/reports/{event.id}/vote",
             json={"agent_id": "late-voter", "approve": True},
+            headers=headers,
         )
         assert resp.status_code == 409
 
     async def test_vote_reaches_rejection(self, client, db_session, oracle_setup):
         """Enough rejections marks report as rejected."""
         person, _, token = oracle_setup
+        headers = {"Authorization": f"Bearer {token}"}
         event = OracleEvent(
             person_id=person.id,
             event_type="scandal",
@@ -161,6 +166,7 @@ class TestVoteOnReportExtended:
         resp = await client.post(
             f"/api/v1/oracle/reports/{event.id}/vote",
             json={"agent_id": "agent-b", "approve": False},
+            headers=headers,
         )
         assert resp.status_code == 200
         data = resp.json()

@@ -7,7 +7,14 @@ from nile.models.benchmark_run import BenchmarkRun
 
 @pytest.mark.asyncio
 class TestCreateBenchmark:
-    async def test_create(self, client, db_session):
+    async def test_create_unauthenticated(self, client):
+        resp = await client.post(
+            "/api/v1/benchmarks/run",
+            json={"mode": "detect", "agent": "test", "split": "all"},
+        )
+        assert resp.status_code == 401
+
+    async def test_create(self, client, auth_headers, db_session):
         resp = await client.post(
             "/api/v1/benchmarks/run",
             json={
@@ -15,6 +22,7 @@ class TestCreateBenchmark:
                 "agent": "claude-opus-4-6",
                 "split": "all",
             },
+            headers=auth_headers,
         )
         assert resp.status_code == 201
         data = resp.json()
@@ -22,7 +30,7 @@ class TestCreateBenchmark:
         assert data["agent"] == "claude-opus-4-6"
         assert data["status"] == "running"
 
-    async def test_create_with_baseline(self, client, db_session):
+    async def test_create_with_baseline(self, client, auth_headers, db_session):
         resp = await client.post(
             "/api/v1/benchmarks/run",
             json={
@@ -30,6 +38,7 @@ class TestCreateBenchmark:
                 "agent": "test-agent",
                 "baseline_agent": "gpt-5",
             },
+            headers=auth_headers,
         )
         assert resp.status_code == 201
         data = resp.json()

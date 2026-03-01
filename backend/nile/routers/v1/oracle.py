@@ -65,6 +65,7 @@ async def submit_report(
 async def vote_on_report(
     report_id: uuid.UUID,
     req: OracleVoteRequest,
+    agent: Agent = Depends(get_current_agent),
     db: AsyncSession = Depends(get_db),
 ) -> OracleEventResponse:
     """Vote on a pending oracle report."""

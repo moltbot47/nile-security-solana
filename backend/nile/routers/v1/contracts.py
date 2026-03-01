@@ -6,7 +6,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from nile.core.auth import get_current_agent
 from nile.core.database import get_db
+from nile.models.agent import Agent
 from nile.models.contract import Contract
 from nile.models.nile_score import NileScore
 from nile.models.vulnerability import Vulnerability
@@ -22,7 +24,11 @@ async def list_contracts(skip: int = 0, limit: int = 50, db: AsyncSession = Depe
 
 
 @router.post("", response_model=ContractResponse, status_code=201)
-async def create_contract(data: ContractCreate, db: AsyncSession = Depends(get_db)):
+async def create_contract(
+    data: ContractCreate,
+    agent: Agent = Depends(get_current_agent),
+    db: AsyncSession = Depends(get_db),
+):
     contract = Contract(
         address=data.address,
         name=data.name,

@@ -129,6 +129,30 @@ def sample_agent_data():
 
 
 # ---------------------------------------------------------------------------
+# Authenticated agent fixture (for auth-protected endpoints)
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+async def auth_headers(db_session):
+    """Create an agent in the DB and return JWT auth headers."""
+    from nile.core.auth import create_agent_token
+    from nile.models.agent import Agent
+
+    agent = Agent(
+        name=f"test-agent-{uuid.uuid4().hex[:8]}",
+        owner_id="test-owner",
+        capabilities=["detect"],
+        status="active",
+        api_key_hash="fakehash",
+    )
+    db_session.add(agent)
+    await db_session.flush()
+    token = create_agent_token(str(agent.id))
+    return {"Authorization": f"Bearer {token}"}
+
+
+# ---------------------------------------------------------------------------
 # Scorer fixtures (unit tests, no DB needed)
 # ---------------------------------------------------------------------------
 

@@ -65,27 +65,39 @@ class TestListReports:
 
 @pytest.mark.asyncio
 class TestVoteOnReport:
-    async def test_vote_not_found(self, client):
+    async def test_vote_unauthenticated(self, client):
         resp = await client.post(
             f"/api/v1/oracle/reports/{uuid.uuid4()}/vote",
             json={"agent_id": "agent-2", "approve": True},
         )
+        assert resp.status_code == 401
+
+    async def test_vote_not_found(self, client, auth_headers):
+        resp = await client.post(
+            f"/api/v1/oracle/reports/{uuid.uuid4()}/vote",
+            json={"agent_id": "agent-2", "approve": True},
+            headers=auth_headers,
+        )
         assert resp.status_code == 404
 
-    async def test_vote_reaches_consensus(self, client, db_session, person_and_event):
+    async def test_vote_reaches_consensus(self, client, auth_headers, db_session, person_and_event):
         _person, event = person_and_event
         resp = await client.post(
             f"/api/v1/oracle/reports/{event.id}/vote",
             json={"agent_id": "agent-2", "approve": True},
+            headers=auth_headers,
         )
         assert resp.status_code == 200
         data = resp.json()
         assert data["status"] == "confirmed"
 
-    async def test_duplicate_vote_rejected(self, client, db_session, person_and_event):
+    async def test_duplicate_vote_rejected(
+        self, client, auth_headers, db_session, person_and_event
+    ):
         _person, event = person_and_event
         resp = await client.post(
             f"/api/v1/oracle/reports/{event.id}/vote",
             json={"agent_id": "agent-1", "approve": True},
+            headers=auth_headers,
         )
         assert resp.status_code == 409
