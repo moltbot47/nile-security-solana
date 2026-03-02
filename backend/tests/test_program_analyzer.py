@@ -227,23 +227,28 @@ class TestTokenPatterns:
         assert conf >= 0.5
 
     def test_rug_similarity_clean_token(self):
+        from nile.services.pumpfun_analyzer import PumpFunAnalysis
+
         analyzer = SolanaProgramAnalyzer()
-        score = analyzer._compute_rug_similarity(
-            {
-                "mint_authority_active": False,
-                "freeze_authority_active": False,
-            }
+        pf = PumpFunAnalysis(lp_detected=True, mint_age_days=90.0)
+        score = analyzer._compute_enhanced_rug_similarity(
+            {"mint_authority_active": False, "freeze_authority_active": False},
+            pf,
         )
         assert score == 0.0
 
     def test_rug_similarity_suspicious_token(self):
+        from nile.services.pumpfun_analyzer import PumpFunAnalysis
+
         analyzer = SolanaProgramAnalyzer()
-        score = analyzer._compute_rug_similarity(
-            {
-                "mint_authority_active": True,
-                "freeze_authority_active": True,
-                "supply": 100,
-                "decimals": 9,
-            }
+        pf = PumpFunAnalysis(
+            top5_concentration_pct=85.0,
+            lp_detected=False,
+            serial_deployer=True,
+            mint_age_days=0.5,
         )
-        assert score > 0.5
+        score = analyzer._compute_enhanced_rug_similarity(
+            {"mint_authority_active": True, "freeze_authority_active": True},
+            pf,
+        )
+        assert score > 0.8

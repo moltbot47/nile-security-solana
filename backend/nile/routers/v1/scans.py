@@ -14,7 +14,10 @@ from nile.models.agent import Agent
 from nile.models.scan_job import ScanJob
 from nile.schemas.scan import ScanCreate, ScanResponse
 from nile.schemas.solana_scan import (
+    CreatorAnalysis,
     ExploitMatch,
+    HolderAnalysis,
+    LiquidityAnalysis,
     SolanaScanRequest,
     SolanaScanResponse,
     SolanaScanScoreBreakdown,
@@ -64,6 +67,16 @@ async def scan_solana_program(req: SolanaScanRequest, request: Request):
         token_info=analysis.get("token_info"),
         ecosystem=analysis.get("ecosystem"),
         idl_analysis=analysis.get("idl_analysis"),
+        holder_analysis=HolderAnalysis(**analysis["holder_analysis"])
+        if analysis.get("holder_analysis")
+        else None,
+        liquidity_analysis=LiquidityAnalysis(**analysis["liquidity_analysis"])
+        if analysis.get("liquidity_analysis")
+        else None,
+        creator_analysis=CreatorAnalysis(**analysis["creator_analysis"])
+        if analysis.get("creator_analysis")
+        else None,
+        pumpfun_risk_flags=analysis.get("pumpfun_risk_flags", []),
     )
 
 

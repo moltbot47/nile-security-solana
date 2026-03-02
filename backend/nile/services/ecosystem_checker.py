@@ -23,6 +23,10 @@ KNOWN_AUDITORS = {
     "mad_shield",
 }
 
+# Major DEX program IDs
+RAYDIUM_AMM_V4 = "mv3ekLzLbnVPNxjSKvqBpU3ZeZXPQdEC3bp5MDEBG68"
+ORCA_WHIRLPOOL = "whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc"
+
 # Well-known verified Solana programs
 KNOWN_PROGRAMS = {
     "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA": "SPL Token",
@@ -82,6 +86,26 @@ async def check_program_age_days(program_address: str) -> int:
         logger.debug("Failed to estimate program age for %s", program_address)
 
     return 0
+
+
+async def check_dex_pool_exists(mint_address: str) -> dict:
+    """Check if a token has liquidity pools on major Solana DEXes.
+
+    For MVP, uses Jupiter strict list as reliable proxy — tokens on Jupiter
+    must have active LP pools (Raydium, Orca, or other supported DEXes).
+    """
+    result = {"has_raydium_lp": False, "has_orca_lp": False, "lp_detected": False}
+
+    try:
+        on_jupiter = await check_jupiter_strict_list(mint_address)
+        if on_jupiter:
+            # Jupiter routes through Raydium/Orca — presence implies LP exists
+            result["lp_detected"] = True
+            result["has_raydium_lp"] = True
+    except Exception:
+        logger.debug("DEX pool check failed for %s", mint_address)
+
+    return result
 
 
 async def assess_ecosystem_presence(program_address: str) -> dict:

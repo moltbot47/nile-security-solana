@@ -19,6 +19,7 @@ from nile.services.nile_scorer import (
     NameInputs,
     compute_nile_score,
 )
+from nile.services.pumpfun_analyzer import PumpFunAnalysis, pumpfun_analyzer
 
 logger = logging.getLogger(__name__)
 
@@ -106,34 +107,44 @@ class SolanaProgramAnalyzer:
         }
 
     async def _analyze_token(self, address: str, token_info: dict) -> dict:
-        """Analyze an SPL token mint."""
+        """Analyze an SPL token mint with pump.fun-specific heuristics."""
         ecosystem = await assess_ecosystem_presence(address)
 
-        # Token-specific exploit matching
-        exploit_matches = self._match_token_exploit_patterns(token_info)
+        # Deep pump.fun analysis (holder concentration, creator, LP, age)
+        pf = await pumpfun_analyzer.analyze(address, token_info)
 
-        # Build scoring inputs for a token
+        # Token-specific exploit matching (enhanced with pumpfun signals)
+        exploit_matches = self._match_token_exploit_patterns(token_info, pf)
+
+        # Build scoring inputs enriched with pump.fun signals
+        age_days = ecosystem.get("age_days", 0) or int(pf.mint_age_days)
         name_inputs = NameInputs(
             is_verified=ecosystem.get("jupiter_strict_list", False),
             audit_count=0,
-            age_days=ecosystem.get("age_days", 0),
-            team_identified=bool(ecosystem.get("known_program")),
+            age_days=age_days,
+            team_identified=bool(ecosystem.get("known_program")) and not pf.serial_deployer,
             ecosystem_score=ecosystem.get("ecosystem_score", 0.0),
         )
 
-        # Token security assessment
+        # Token security — freeze auth + no LP treated as unsafe CPI risk
         image_inputs = ImageInputs(
             missing_signer_checks=0,
             missing_owner_checks=1 if token_info.get("mint_authority_active") else 0,
+            unsafe_cpi_calls=(
+                1
+                if token_info.get("freeze_authority_active") and not pf.lp_detected
+                else 0
+            ),
         )
 
         likeness_inputs = LikenessInputs(
             exploit_pattern_matches=exploit_matches,
-            rug_pattern_similarity=self._compute_rug_similarity(token_info),
+            rug_pattern_similarity=self._compute_enhanced_rug_similarity(token_info, pf),
         )
 
         essence_inputs = EssenceInputs(
             upgrade_authority_active=token_info.get("mint_authority_active", False),
+            cpi_call_count=pf.whale_count,  # Centralization penalty
         )
 
         score = compute_nile_score(name_inputs, image_inputs, likeness_inputs, essence_inputs)
@@ -145,6 +156,23 @@ class SolanaProgramAnalyzer:
             "token_info": token_info,
             "ecosystem": ecosystem,
             "exploit_matches": exploit_matches,
+            "holder_analysis": {
+                "top_holders": pf.top_holders[:5],
+                "top5_concentration_pct": pf.top5_concentration_pct,
+                "top10_concentration_pct": pf.top10_concentration_pct,
+                "whale_count": pf.whale_count,
+            },
+            "liquidity_analysis": {
+                "lp_detected": pf.lp_detected,
+                "has_raydium_lp": pf.has_raydium_lp,
+                "has_orca_lp": pf.has_orca_lp,
+            },
+            "creator_analysis": {
+                "creator_address": pf.creator_address,
+                "tokens_created": pf.creator_token_count,
+                "serial_deployer": pf.serial_deployer,
+            },
+            "pumpfun_risk_flags": pf.risk_flags,
         }
 
     async def _assess_name(self, address: str, idl: dict | None, ecosystem: dict) -> NameInputs:
@@ -281,8 +309,10 @@ class SolanaProgramAnalyzer:
 
         return matched
 
-    def _match_token_exploit_patterns(self, token_info: dict) -> list[dict]:
-        """Match token against rug pull patterns."""
+    def _match_token_exploit_patterns(
+        self, token_info: dict, pf: PumpFunAnalysis | None = None
+    ) -> list[dict]:
+        """Match token against rug pull patterns including pump.fun-specific ones."""
         patterns = _load_exploit_patterns()
         matches = []
 
@@ -290,20 +320,67 @@ class SolanaProgramAnalyzer:
             if pattern.get("category") != "rug_pull":
                 continue
 
-            confidence = self._compute_token_rug_confidence(token_info)
-            if confidence > 0.3:
-                indicators = []
+            pattern_id = pattern.get("id", "")
+            confidence = 0.0
+            indicators: list[str] = []
+
+            if pattern_id == "SOL-011" and pf:
+                # Supply concentration rug
+                if pf.top5_concentration_pct > 80:
+                    confidence = 0.8
+                    indicators.append("Top 5 wallets hold >80% of total supply")
+                elif pf.top5_concentration_pct > 60:
+                    confidence = 0.5
+                    indicators.append("Top 5 wallets hold >60% of total supply")
+                if pf.top_holders:
+                    max_pct = max(h.get("pct", 0) for h in pf.top_holders)
+                    if max_pct > 50:
+                        confidence = max(confidence, 0.7)
+                        indicators.append("Single wallet holds >50% of supply")
+
+            elif pattern_id == "SOL-012" and pf:
+                # Serial deployer
+                if pf.serial_deployer:
+                    confidence = 0.6
+                    indicators.append(
+                        f"Creator wallet holds {pf.creator_token_count}+ different token positions"
+                    )
+
+            elif pattern_id == "SOL-013" and pf:
+                # Illiquid token
+                if not pf.lp_detected:
+                    confidence = 0.5
+                    indicators.append("Not listed on Jupiter strict list")
+                    if not pf.has_raydium_lp:
+                        indicators.append("No Raydium AMM v4 pool detected")
+                    if not pf.has_orca_lp:
+                        indicators.append("No Orca Whirlpool pool detected")
+
+            elif pattern_id == "SOL-014" and pf:
+                # Honeypot
+                if token_info.get("freeze_authority_active") and not (pf.lp_detected):
+                    confidence = 0.7
+                    indicators.append("Freeze authority active (can freeze any token account)")
+                    indicators.append("No LP lock detected")
+                    if token_info.get("mint_authority_active"):
+                        confidence = 0.85
+                        indicators.append("Mint authority also active (double risk)")
+
+            else:
+                # Generic rug pull pattern (SOL-006 or any other rug_pull category)
+                confidence = self._compute_token_rug_confidence(token_info)
                 if token_info.get("mint_authority_active"):
                     indicators.append("Mint authority not revoked")
                 if token_info.get("freeze_authority_active"):
                     indicators.append("Freeze authority active")
 
+            if confidence > 0.3:
                 matches.append(
                     {
-                        "pattern_id": pattern["id"],
+                        "pattern_id": pattern_id,
                         "name": pattern["name"],
                         "category": "rug_pull",
-                        "severity": "critical",
+                        "severity": pattern.get("severity", "critical"),
                         "confidence": round(confidence, 2),
                         "cwe": pattern.get("cwe"),
                         "indicators_matched": indicators,
@@ -313,33 +390,49 @@ class SolanaProgramAnalyzer:
         return matches
 
     def _compute_token_rug_confidence(self, token_info: dict) -> float:
-        """Compute rug pull risk for an SPL token."""
+        """Compute rug pull risk for an SPL token (basic authority checks)."""
         confidence = 0.0
 
         if token_info.get("mint_authority_active"):
-            confidence += 0.3  # Can mint unlimited tokens
+            confidence += 0.3
         if token_info.get("freeze_authority_active"):
-            confidence += 0.2  # Can freeze user accounts
+            confidence += 0.2
 
         return min(1.0, confidence)
 
-    def _compute_rug_similarity(self, token_info: dict) -> float:
-        """Compute similarity to known rug pull token patterns (0-1)."""
+    def _compute_enhanced_rug_similarity(
+        self, token_info: dict, pf: PumpFunAnalysis
+    ) -> float:
+        """Enhanced rug similarity incorporating holder concentration, LP, and creator history."""
         score = 0.0
 
+        # Original authority signals
         if token_info.get("mint_authority_active"):
-            score += 0.35
+            score += 0.20
         if token_info.get("freeze_authority_active"):
-            score += 0.25
-        # Low supply with active authorities is a red flag
-        supply = token_info.get("supply", 0)
-        decimals = token_info.get("decimals", 0)
-        if supply > 0 and decimals > 0:
-            normalized = supply / (10**decimals)
-            if normalized < 1000:
-                score += 0.1
+            score += 0.15
 
-        return min(1.0, score)
+        # Holder concentration
+        if pf.top5_concentration_pct > 80:
+            score += 0.20
+        elif pf.top5_concentration_pct > 60:
+            score += 0.10
+
+        # No LP
+        if not pf.lp_detected:
+            score += 0.15
+
+        # Serial deployer
+        if pf.serial_deployer:
+            score += 0.15
+
+        # Young token with mint authority
+        if pf.mint_age_days < 1 and token_info.get("mint_authority_active"):
+            score += 0.15
+        elif pf.mint_age_days < 7:
+            score += 0.05
+
+        return min(1.0, round(score, 3))
 
 
 # Singleton

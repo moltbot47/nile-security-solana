@@ -256,6 +256,68 @@ class SolanaChainService:
             logger.exception("Failed to get tx history: %s", address)
             return []
 
+    async def get_token_largest_accounts(self, mint_address: str) -> list[dict] | None:
+        """Get top token holders by balance for an SPL token mint."""
+        if not validate_solana_address(mint_address):
+            return None
+        try:
+            from solders.pubkey import Pubkey
+
+            pubkey = Pubkey.from_string(mint_address)
+            resp = await self.async_client.get_token_largest_accounts(pubkey)
+
+            if resp.value is None:
+                return None
+
+            return [
+                {
+                    "address": str(account.address),
+                    "amount": int(account.amount),
+                    "decimals": account.decimals,
+                    "ui_amount": account.ui_amount,
+                }
+                for account in resp.value
+            ]
+        except Exception:
+            logger.exception("Failed to get largest accounts: %s", mint_address)
+            return None
+
+    async def get_token_accounts_by_owner(self, owner_address: str) -> list[dict]:
+        """Get all SPL token accounts owned by a wallet address."""
+        if not validate_solana_address(owner_address):
+            return []
+        try:
+            from solders.pubkey import Pubkey
+
+            owner = Pubkey.from_string(owner_address)
+            token_program = Pubkey.from_string(
+                "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+            )
+            resp = await self.async_client.get_token_accounts_by_owner_json_parsed(
+                owner, token_program
+            )
+
+            if resp.value is None:
+                return []
+
+            accounts = []
+            for item in resp.value:
+                parsed = item.account.data.parsed
+                if parsed and "info" in parsed:
+                    info = parsed["info"]
+                    accounts.append(
+                        {
+                            "pubkey": str(item.pubkey),
+                            "mint": info.get("mint", ""),
+                            "amount": int(info.get("tokenAmount", {}).get("amount", 0)),
+                            "decimals": info.get("tokenAmount", {}).get("decimals", 0),
+                        }
+                    )
+            return accounts
+        except Exception:
+            logger.exception("Failed to get token accounts for owner: %s", owner_address)
+            return []
+
     # --- Scoring Helpers ---
 
     async def assess_program_security(self, program_address: str) -> dict:
