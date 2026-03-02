@@ -36,9 +36,9 @@ class TestPaginationBounds:
             "/api/v1/kpis/trends?limit=-1",
         ],
     )
-    async def test_invalid_pagination_rejected(self, client, db_session, url):
+    async def test_invalid_pagination_rejected(self, client, db_session, auth_headers, url):
         """Endpoints should return 422 for invalid pagination values."""
-        resp = await client.get(url)
+        resp = await client.get(url, headers=auth_headers)
         assert resp.status_code == 422, f"Expected 422 for {url}, got {resp.status_code}"
 
     @pytest.mark.parametrize(
@@ -54,9 +54,9 @@ class TestPaginationBounds:
             "/api/v1/kpis/trends?limit=100",
         ],
     )
-    async def test_valid_pagination_accepted(self, client, db_session, url):
+    async def test_valid_pagination_accepted(self, client, db_session, auth_headers, url):
         """Endpoints should return 200 for valid pagination values."""
-        resp = await client.get(url)
+        resp = await client.get(url, headers=auth_headers)
         assert resp.status_code == 200, f"Expected 200 for {url}, got {resp.status_code}"
 
 

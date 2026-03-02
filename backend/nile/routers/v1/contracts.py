@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from nile.core.auth import get_current_agent
 from nile.core.database import get_db
-from nile.core.rate_limit import RateLimiter
+from nile.core.rate_limit import create_limiter
 from nile.models.agent import Agent
 from nile.models.contract import Contract
 from nile.models.nile_score import NileScore
@@ -23,7 +23,7 @@ from nile.schemas.contract import (
 router = APIRouter()
 
 # 10 contracts per minute per IP
-contract_create_limiter = RateLimiter(max_requests=10, window_seconds=60)
+contract_create_limiter = create_limiter(max_requests=10, window_seconds=60)
 
 
 @router.get("", response_model=list[ContractResponse])
@@ -45,7 +45,7 @@ async def create_contract(
     db: AsyncSession = Depends(get_db),
 ):
     """Register a new smart contract for NILE scoring."""
-    contract_create_limiter.check(request)
+    await contract_create_limiter.check(request)
     contract = Contract(
         address=data.address,
         name=data.name,

@@ -70,12 +70,19 @@ class _Metrics:
 metrics = _Metrics()
 
 
+# Internal IPs allowed to scrape metrics (localhost + Docker internal networks)
+_METRICS_ALLOWED_PREFIXES = ("127.", "10.", "172.16.", "172.17.", "172.18.", "192.168.", "::1")
+
+
 class MetricsMiddleware(BaseHTTPMiddleware):
     """Records request metrics and serves /metrics endpoint."""
 
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
-        # Serve Prometheus metrics on /metrics
+        # Serve Prometheus metrics on /metrics (internal only)
         if request.url.path == "/metrics":
+            client_ip = request.client.host if request.client else ""
+            if not client_ip.startswith(_METRICS_ALLOWED_PREFIXES):
+                return PlainTextResponse("Forbidden", status_code=403)
             return PlainTextResponse(metrics.render(), media_type="text/plain")
 
         start = time.monotonic()

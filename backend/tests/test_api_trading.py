@@ -96,13 +96,19 @@ class TestGetQuote:
 
 @pytest.mark.asyncio
 class TestTradeHistory:
-    async def test_empty_history(self, client, db_session):
+    async def test_history_unauthenticated(self, client, db_session):
         resp = await client.get("/api/v1/trading/history")
+        assert resp.status_code == 401
+
+    async def test_empty_history(self, client, auth_headers, db_session):
+        resp = await client.get("/api/v1/trading/history", headers=auth_headers)
         assert resp.status_code == 200
         assert resp.json() == []
 
-    async def test_filter_by_address(self, client, db_session):
-        resp = await client.get("/api/v1/trading/history?trader_address=someaddr")
+    async def test_filter_by_address(self, client, auth_headers, db_session):
+        resp = await client.get(
+            "/api/v1/trading/history?trader_address=someaddr", headers=auth_headers
+        )
         assert resp.status_code == 200
 
 
@@ -190,14 +196,24 @@ class TestExecuteSell:
 
 @pytest.mark.asyncio
 class TestPortfolio:
-    async def test_empty_portfolio(self, client, db_session):
+    async def test_portfolio_unauthenticated(self, client, db_session):
         resp = await client.get(
             "/api/v1/trading/portfolio"
             "?wallet_address=TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         )
+        assert resp.status_code == 401
+
+    async def test_empty_portfolio(self, client, auth_headers, db_session):
+        resp = await client.get(
+            "/api/v1/trading/portfolio"
+            "?wallet_address=TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+            headers=auth_headers,
+        )
         assert resp.status_code == 200
         assert resp.json() == []
 
-    async def test_portfolio_invalid_address(self, client, db_session):
-        resp = await client.get("/api/v1/trading/portfolio?wallet_address=invalid")
+    async def test_portfolio_invalid_address(self, client, auth_headers, db_session):
+        resp = await client.get(
+            "/api/v1/trading/portfolio?wallet_address=invalid", headers=auth_headers
+        )
         assert resp.status_code == 400

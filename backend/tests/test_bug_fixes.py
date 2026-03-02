@@ -100,7 +100,8 @@ async def test_create_person_requires_auth(client):
 # --- Bug 5: Rate limiter memory leak ---
 
 
-def test_rate_limiter_cleans_stale_entries():
+@pytest.mark.asyncio
+async def test_rate_limiter_cleans_stale_entries():
     """Rate limiter must not grow unbounded with unique IPs.
 
     Bug: _requests dict grew forever — stale keys for IPs that stopped
@@ -113,7 +114,7 @@ def test_rate_limiter_cleans_stale_entries():
         mock_request = MagicMock()
         mock_request.client.host = f"192.168.1.{i % 256}"
         mock_request.headers = {}
-        limiter.check(mock_request)
+        await limiter.check(mock_request)
 
     # Wait for window to expire
     time.sleep(1.1)
@@ -122,7 +123,7 @@ def test_rate_limiter_cleans_stale_entries():
     mock_request = MagicMock()
     mock_request.client.host = "10.0.0.1"
     mock_request.headers = {}
-    limiter.check(mock_request)
+    await limiter.check(mock_request)
 
     # After cleanup, stale entries should be removed
     assert len(limiter._requests) <= 10, (
@@ -133,7 +134,8 @@ def test_rate_limiter_cleans_stale_entries():
 # --- Bug 6: Rate limiter trusts X-Forwarded-For ---
 
 
-def test_rate_limiter_ignores_forwarded_for():
+@pytest.mark.asyncio
+async def test_rate_limiter_ignores_forwarded_for():
     """Rate limiter must use real client IP, not X-Forwarded-For.
 
     Bug: Attacker could spoof X-Forwarded-For to bypass rate limits.
@@ -144,13 +146,13 @@ def test_rate_limiter_ignores_forwarded_for():
     mock_request = MagicMock()
     mock_request.client.host = "1.2.3.4"
     mock_request.headers = {"x-forwarded-for": "spoofed-ip-1"}
-    limiter.check(mock_request)
+    await limiter.check(mock_request)
 
     # Second request with different spoofed header but SAME real IP
     mock_request2 = MagicMock()
     mock_request2.client.host = "1.2.3.4"
     mock_request2.headers = {"x-forwarded-for": "spoofed-ip-2"}
-    limiter.check(mock_request2)
+    await limiter.check(mock_request2)
 
     # Third request should be rate limited (same real IP)
     mock_request3 = MagicMock()
@@ -158,7 +160,7 @@ def test_rate_limiter_ignores_forwarded_for():
     mock_request3.headers = {"x-forwarded-for": "spoofed-ip-3"}
 
     with pytest.raises(HTTPException):
-        limiter.check(mock_request3)
+        await limiter.check(mock_request3)
 
 
 # --- Bug 7: get_optional_agent swallows invalid credentials ---

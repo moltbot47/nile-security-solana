@@ -3,7 +3,7 @@ name = "nile-security"
 version = "0.1.0"
 description = "NILE Smart Contract Security Intelligence Platform"
 readme = "README.md"
-license = "Apache-2.0"
+license = "Apache-2.0 AND BUSL-1.1"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.115.0",
@@ -21,8 +21,6 @@ dependencies = [
     "python-multipart>=0.0.18",
     "pyjwt>=2.9.0",
     "discord.py>=2.4.0",
-    "playwright>=1.40.0",
-    "web3>=7.0.0",
     "base58>=2.1.1",
 ]
 
@@ -36,6 +34,7 @@ dev = [
     "aiosqlite>=0.20.0",
     "mypy>=1.11.0",
     "pre-commit>=4.0.0",
+    "playwright>=1.40.0",
 ]
 
 [build-system]

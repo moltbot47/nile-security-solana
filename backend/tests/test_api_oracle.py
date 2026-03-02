@@ -4,12 +4,28 @@ import uuid
 
 import pytest
 
+from nile.models.agent import Agent
 from nile.models.oracle_event import OracleEvent
 from nile.models.person import Person
 
 
 @pytest.fixture
-async def person_and_event(db_session):
+async def oracle_submitter(db_session):
+    """Create a separate agent that submitted the oracle report."""
+    agent = Agent(
+        name="oracle-submitter",
+        owner_id="test-owner",
+        capabilities=["detect"],
+        status="active",
+        api_key_hash="submitterhash",
+    )
+    db_session.add(agent)
+    await db_session.flush()
+    return agent
+
+
+@pytest.fixture
+async def person_and_event(db_session, oracle_submitter):
     """Create a person and a pending oracle event."""
     person = Person(
         display_name="Oracle Test Person",
@@ -19,6 +35,7 @@ async def person_and_event(db_session):
     db_session.add(person)
     await db_session.flush()
 
+    submitter_id = str(oracle_submitter.id)
     event = OracleEvent(
         person_id=person.id,
         event_type="sports_win",
@@ -29,8 +46,8 @@ async def person_and_event(db_session):
         status="pending",
         confirmations=1,
         rejections=0,
-        required_confirmations=2,
-        agent_votes={"agent-1": {"approve": True, "impact": 80}},
+        required_confirmations=3,
+        agent_votes={submitter_id: {"approve": True, "impact": 80, "submitter": True}},
     )
     db_session.add(event)
     await db_session.flush()
@@ -80,24 +97,36 @@ class TestVoteOnReport:
         )
         assert resp.status_code == 404
 
-    async def test_vote_reaches_consensus(self, client, auth_headers, db_session, person_and_event):
+    async def test_vote_accepted(self, client, auth_headers, db_session, person_and_event):
+        """Auth agent (not the submitter) can vote successfully."""
         _person, event = person_and_event
         resp = await client.post(
             f"/api/v1/oracle/reports/{event.id}/vote",
-            json={"agent_id": "agent-2", "approve": True},
+            json={"agent_id": "ignored", "approve": True},
             headers=auth_headers,
         )
         assert resp.status_code == 200
         data = resp.json()
-        assert data["status"] == "confirmed"
+        # 2 of 3 confirmations — still pending
+        assert data["status"] == "pending"
+        assert data["confirmations"] == 2
 
     async def test_duplicate_vote_rejected(
         self, client, auth_headers, db_session, person_and_event
     ):
+        """Same agent voting twice is rejected."""
         _person, event = person_and_event
-        resp = await client.post(
+        # First vote succeeds
+        resp1 = await client.post(
             f"/api/v1/oracle/reports/{event.id}/vote",
-            json={"agent_id": "agent-1", "approve": True},
+            json={"agent_id": "ignored", "approve": True},
             headers=auth_headers,
         )
-        assert resp.status_code == 409
+        assert resp1.status_code == 200
+        # Second vote from same agent is rejected
+        resp2 = await client.post(
+            f"/api/v1/oracle/reports/{event.id}/vote",
+            json={"agent_id": "ignored", "approve": True},
+            headers=auth_headers,
+        )
+        assert resp2.status_code == 409

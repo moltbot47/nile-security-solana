@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from nile.core.auth import get_current_agent
 from nile.core.database import get_db
 from nile.core.exceptions import AnalysisError, InvalidAddressError, NotFoundError
-from nile.core.rate_limit import RateLimiter
+from nile.core.rate_limit import create_limiter
 from nile.models.agent import Agent
 from nile.models.scan_job import ScanJob
 from nile.schemas.scan import ScanCreate, ScanResponse
@@ -28,7 +28,7 @@ from nile.services.program_analyzer import program_analyzer
 router = APIRouter()
 
 # 10 scans per minute per IP — prevents abuse of the heavy analysis endpoint
-scan_limiter = RateLimiter(max_requests=10, window_seconds=60)
+scan_limiter = create_limiter(max_requests=10, window_seconds=60)
 
 
 @router.post("/solana", response_model=SolanaScanResponse)
@@ -38,7 +38,7 @@ async def scan_solana_program(req: SolanaScanRequest, request: Request):
     This is the hero endpoint — paste an address, get a security score.
     No database record required; runs analysis in real-time.
     """
-    scan_limiter.check(request)
+    await scan_limiter.check(request)
 
     if not validate_solana_address(req.program_address):
         raise InvalidAddressError()

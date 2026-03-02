@@ -9,15 +9,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from nile.core.auth import Agent, get_current_agent
 from nile.core.database import get_db
-from nile.core.rate_limit import RateLimiter
+from nile.core.rate_limit import create_limiter
 from nile.models.oracle_event import OracleEvent
 from nile.schemas.person import OracleEventResponse
 
 router = APIRouter()
 
 # 10 reports/min, 30 votes/min per IP
-report_limiter = RateLimiter(max_requests=10, window_seconds=60)
-vote_limiter = RateLimiter(max_requests=30, window_seconds=60)
+report_limiter = create_limiter(max_requests=10, window_seconds=60)
+vote_limiter = create_limiter(max_requests=30, window_seconds=60)
 
 
 class OracleReportRequest(BaseModel):
@@ -44,7 +44,8 @@ async def submit_report(
     db: AsyncSession = Depends(get_db),
 ) -> OracleEventResponse:
     """Submit a new oracle report about a person."""
-    report_limiter.check(request)
+    await report_limiter.check(request)
+    submitter_id = str(agent.id)
     event = OracleEvent(
         person_id=req.person_id,
         event_type=req.event_type,
@@ -55,10 +56,10 @@ async def submit_report(
         status="pending",
         confirmations=1,  # submitter auto-confirms
         rejections=0,
-        required_confirmations=2,
-        agent_votes={req.agent_id: {"approve": True, "impact": req.impact_score}}
-        if req.agent_id
-        else {},
+        required_confirmations=3,
+        agent_votes={
+            submitter_id: {"approve": True, "impact": req.impact_score, "submitter": True},
+        },
     )
     db.add(event)
     await db.flush()
@@ -77,7 +78,7 @@ async def vote_on_report(
     db: AsyncSession = Depends(get_db),
 ) -> OracleEventResponse:
     """Vote on a pending oracle report."""
-    vote_limiter.check(request)
+    await vote_limiter.check(request)
     query = select(OracleEvent).where(OracleEvent.id == report_id)
     result = await db.execute(query)
     event = result.scalar_one_or_none()
@@ -86,13 +87,20 @@ async def vote_on_report(
     if event.status != "pending":
         raise HTTPException(409, f"Report already {event.status}")
 
-    # Check if agent already voted
+    # Check if agent already voted (use authenticated identity, not request body)
+    voter_id = str(agent.id)
     votes = event.agent_votes or {}
-    if req.agent_id in votes:
+    if voter_id in votes:
         raise HTTPException(409, "Agent already voted on this report")
 
-    # Record vote
-    votes[req.agent_id] = {
+    # Prevent submitter from voting on their own report
+    for vid, vdata in votes.items():
+        if isinstance(vdata, dict) and vdata.get("submitter") and vid == voter_id:
+            raise HTTPException(409, "Submitter cannot vote on their own report")
+
+    # Record vote (copy dict to ensure SQLAlchemy detects mutation)
+    votes = dict(votes)
+    votes[voter_id] = {
         "approve": req.approve,
         "impact": req.impact_score or event.impact_score,
     }

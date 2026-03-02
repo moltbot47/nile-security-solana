@@ -28,6 +28,18 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["X-XSS-Protection"] = "1; mode=block"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "script-src 'self'; "
+            "style-src 'self' 'unsafe-inline'; "
+            "img-src 'self' data: https:; "
+            "font-src 'self'; "
+            "connect-src 'self' https://api.devnet.solana.com "
+            "https://api.mainnet-beta.solana.com; "
+            "frame-ancestors 'none'; "
+            "base-uri 'self'; "
+            "form-action 'self'"
+        )
         if settings.env != "development":
             response.headers["Strict-Transport-Security"] = (
                 "max-age=63072000; includeSubDomains; preload"
@@ -144,8 +156,8 @@ def create_app() -> FastAPI:
         CORSMiddleware,
         allow_origins=settings.cors_origins,
         allow_credentials=True,
-        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-        allow_headers=["Content-Type", "Authorization", "X-Request-ID"],
+        allow_methods=["GET", "POST", "PUT", "PATCH", "OPTIONS"],
+        allow_headers=["Content-Type", "Authorization", "X-Request-ID", "X-API-Key"],
     )
 
     # --- Routes ---

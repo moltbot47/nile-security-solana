@@ -53,7 +53,7 @@ curl -X POST http://localhost:8000/api/v1/scans/solana \
 ## Tests
 
 ```bash
-cd backend && uv run pytest -v          # 721+ tests
+cd backend && uv run pytest -v          # 751+ tests
 cd frontend && npx vitest run           # 122 tests
 cd frontend && npx tsc --noEmit         # Type check
 cd frontend && npx next build           # 15 pages
@@ -88,4 +88,13 @@ cd frontend && npx next build           # 15 pages
 
 ## License
 
-Proprietary. See LICENSE for details.
+NILE Security uses an [open-core licensing model](LICENSING.md):
+
+- **Core Engine** (Apache 2.0) — NILE scoring algorithm, Solana program analysis, exploit pattern matching, hero scan endpoint, on-chain Anchor program
+- **Commercial Features** (BSL 1.1) — Agent ecosystem, trading engine, risk engine, premium analytics, dashboard, Discord bot, monitoring stack
+
+The core engine is fully open-source and independently usable. See [LICENSING.md](LICENSING.md) for the complete directory-to-license mapping.
+
+### Contributing
+
+Contributions to Apache 2.0 components (core scanner, scoring engine, exploit patterns) are welcome under the Apache 2.0 license. See [LICENSING.md](LICENSING.md) for details.

@@ -68,8 +68,11 @@ async def portfolio_env(db_session):
 @pytest.mark.asyncio
 class TestPortfolioEndpoint:
     async def test_portfolio_with_holdings(self, client, db_session, portfolio_env):
-        _, token, portfolio, _, _, wallet = portfolio_env
-        resp = await client.get(f"/api/v1/trading/portfolio?wallet_address={wallet}")
+        _, token, portfolio, _, jwt, wallet = portfolio_env
+        resp = await client.get(
+            f"/api/v1/trading/portfolio?wallet_address={wallet}",
+            headers={"Authorization": f"Bearer {jwt}"},
+        )
         assert resp.status_code == 200
         data = resp.json()
         assert len(data) >= 1
@@ -81,16 +84,20 @@ class TestPortfolioEndpoint:
         # (0.05 - 0.04) * 500 = 5.0
         assert abs(item["unrealized_pnl_sol"] - 5.0) < 0.01
 
-    async def test_portfolio_empty(self, client, db_session):
+    async def test_portfolio_empty(self, client, auth_headers, db_session):
         resp = await client.get(
             "/api/v1/trading/portfolio"
-            "?wallet_address=TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+            "?wallet_address=TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+            headers=auth_headers,
         )
         assert resp.status_code == 200
         assert resp.json() == []
 
-    async def test_portfolio_invalid_address(self, client, db_session):
-        resp = await client.get("/api/v1/trading/portfolio?wallet_address=NONEXISTENT")
+    async def test_portfolio_invalid_address(self, client, auth_headers, db_session):
+        resp = await client.get(
+            "/api/v1/trading/portfolio?wallet_address=NONEXISTENT",
+            headers=auth_headers,
+        )
         assert resp.status_code == 400
 
 
@@ -131,7 +138,10 @@ class TestTradeHistory:
             },
             headers={"Authorization": f"Bearer {jwt}"},
         )
-        resp = await client.get(f"/api/v1/trading/history?trader_address={addr}")
+        resp = await client.get(
+            f"/api/v1/trading/history?trader_address={addr}",
+            headers={"Authorization": f"Bearer {jwt}"},
+        )
         assert resp.status_code == 200
         data = resp.json()
         assert len(data) >= 1

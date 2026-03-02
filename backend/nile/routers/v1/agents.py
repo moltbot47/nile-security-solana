@@ -16,7 +16,7 @@ from nile.core.auth import (
 )
 from nile.core.database import get_db
 from nile.core.event_bus import publish_event
-from nile.core.rate_limit import RateLimiter
+from nile.core.rate_limit import create_limiter
 from nile.models.agent import Agent
 from nile.models.agent_contribution import AgentContribution
 from nile.schemas.soul_token import HeartbeatResponse
@@ -24,9 +24,9 @@ from nile.schemas.soul_token import HeartbeatResponse
 router = APIRouter()
 
 # 5 registrations per minute per IP
-register_limiter = RateLimiter(max_requests=5, window_seconds=60)
+register_limiter = create_limiter(max_requests=5, window_seconds=60)
 # 60 heartbeats per minute per IP (1/sec is normal)
-heartbeat_limiter = RateLimiter(max_requests=60, window_seconds=60)
+heartbeat_limiter = create_limiter(max_requests=60, window_seconds=60)
 
 
 # --- Schemas ---
@@ -107,7 +107,7 @@ async def register_agent(
     req: AgentRegisterRequest, request: Request, db: AsyncSession = Depends(get_db)
 ):
     """Register a new agent and receive API key + JWT token."""
-    register_limiter.check(request)
+    await register_limiter.check(request)
     existing = await db.execute(select(Agent).where(Agent.name == req.name))
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=409, detail="Agent name already taken")
@@ -283,7 +283,7 @@ async def heartbeat(
     db: AsyncSession = Depends(get_db),
 ) -> HeartbeatResponse:
     """Report agent liveness. Expected every 30s."""
-    heartbeat_limiter.check(request)
+    await heartbeat_limiter.check(request)
     if str(current_agent.id) != str(agent_id):
         raise HTTPException(status_code=403, detail="Can only heartbeat your own agent")
 

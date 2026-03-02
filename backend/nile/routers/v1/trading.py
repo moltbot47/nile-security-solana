@@ -36,7 +36,7 @@ async def get_quote(
     db: AsyncSession = Depends(get_db),
 ) -> QuoteResponse:
     """Get a price quote for a buy or sell."""
-    quote_limiter.check(request)
+    await quote_limiter.check(request)
     # Look up soul token by person_id
     query = select(SoulToken).where(SoulToken.person_id == req.person_id)
     result = await db.execute(query)
@@ -85,7 +85,7 @@ async def execute_buy(
     db: AsyncSession = Depends(get_db),
 ) -> TradeResponse:
     """Execute a buy trade (off-chain record, on-chain tx async)."""
-    trading_limiter.check(request)
+    await trading_limiter.check(request)
     query = select(SoulToken).where(SoulToken.person_id == req.person_id)
     result = await db.execute(query)
     token = result.scalar_one_or_none()
@@ -143,7 +143,7 @@ async def execute_sell(
     db: AsyncSession = Depends(get_db),
 ) -> TradeResponse:
     """Execute a sell trade (off-chain record, on-chain tx async)."""
-    trading_limiter.check(request)
+    await trading_limiter.check(request)
     query = select(SoulToken).where(SoulToken.person_id == req.person_id)
     result = await db.execute(query)
     token = result.scalar_one_or_none()
@@ -197,6 +197,7 @@ async def execute_sell(
 async def trade_history(
     trader_address: str | None = None,
     limit: int = Query(50, ge=1, le=500),
+    agent: Agent = Depends(get_current_agent),
     db: AsyncSession = Depends(get_db),
 ) -> list[TradeResponse]:
     """Get trade history, optionally filtered by trader."""
@@ -211,6 +212,7 @@ async def trade_history(
 @router.get("/portfolio", response_model=list[PortfolioItem])
 async def get_portfolio(
     wallet_address: str,
+    agent: Agent = Depends(get_current_agent),
     db: AsyncSession = Depends(get_db),
 ) -> list[PortfolioItem]:
     """Get portfolio holdings for a wallet."""
