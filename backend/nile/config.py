@@ -40,7 +40,9 @@ class Settings(BaseSettings):
     treasury_program_id: str = ""  # Fee management program
 
     # Pyth Oracle (SOL/USD price feed)
-    pyth_sol_usd_feed: str = "J83w4HKfqxwcq3BEMMkPFSppX3gqekLyLJBexebFVkix"  # Pyth SOL/USD devnet
+    # Devnet: J83w4HKfqxwcq3BEMMkPFSppX3gqekLyLJBexebFVkix
+    # Mainnet: H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG
+    pyth_sol_usd_feed: str = "J83w4HKfqxwcq3BEMMkPFSppX3gqekLyLJBexebFVkix"
 
     model_config = {"env_file": ".env", "env_prefix": "NILE_"}
 

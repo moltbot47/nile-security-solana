@@ -98,9 +98,33 @@ def create_app() -> FastAPI:
 
     app = FastAPI(
         title=settings.app_name,
-        description="NILE Smart Contract Security Intelligence Platform",
-        version="0.3.0",
+        description=(
+            "## NILE Security API\n\n"
+            "Pre-transaction security intelligence for Solana programs and tokens.\n\n"
+            "**Core endpoint:** `POST /api/v1/scans/solana` — paste any Solana address, "
+            "get a 0-100 security score with exploit pattern matching, holder concentration "
+            "analysis, liquidity detection, and creator wallet profiling.\n\n"
+            "### Scoring Dimensions\n"
+            "- **Name** (25%) — Identity, provenance, ecosystem presence\n"
+            "- **Image** (25%) — Security posture (signer checks, CPI safety)\n"
+            "- **Likeness** (25%) — Exploit pattern matching (14 known patterns)\n"
+            "- **Essence** (25%) — Code quality, upgrade authority, decentralization\n\n"
+            "### Grades\n"
+            "| Score | Grade | Meaning |\n"
+            "|-------|-------|---------|\n"
+            "| 90-100 | A | Very safe |\n"
+            "| 80-89 | B | Safe |\n"
+            "| 70-79 | C | Moderate risk |\n"
+            "| 50-69 | D | High risk |\n"
+            "| 0-49 | F | Critical risk |\n\n"
+            "### Integration\n"
+            "Wallet teams: contact dbutler@eulaproperties.com for API key access.\n"
+        ),
+        version="0.4.0",
         lifespan=lifespan,
+        docs_url="/api/docs",
+        redoc_url="/api/redoc",
+        openapi_url="/api/openapi.json",
     )
 
     # --- Exception handlers ---
