@@ -5,6 +5,7 @@ and token age to produce pump.fun-specific risk flags that feed into the NILE
 scoring pipeline.
 """
 
+import asyncio
 import logging
 from dataclasses import dataclass, field
 
@@ -65,15 +66,16 @@ class PumpFunTokenAnalyzer:
         supply = token_info.get("supply", 0)
         decimals = token_info.get("decimals", 0)
 
-        holder_data = await self._analyze_holder_concentration(mint_address, supply, decimals)
-        creator_data = await self._analyze_creator_wallet(token_info, mint_address)
-        lp_data = await self._detect_liquidity_pools(mint_address)
-        age_data = await self._estimate_token_age(mint_address)
-
-        # Check if token is on Jupiter (used for stablecoin exception)
+        # Parallel RPC: all independent checks at once
         from nile.services.ecosystem_checker import check_jupiter_strict_list
 
-        on_jupiter = await check_jupiter_strict_list(mint_address)
+        holder_data, creator_data, lp_data, age_data, on_jupiter = await asyncio.gather(
+            self._analyze_holder_concentration(mint_address, supply, decimals),
+            self._analyze_creator_wallet(token_info, mint_address),
+            self._detect_liquidity_pools(mint_address),
+            self._estimate_token_age(mint_address),
+            check_jupiter_strict_list(mint_address),
+        )
 
         risk_flags = self._compute_risk_flags(
             token_info=token_info,

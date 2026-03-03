@@ -13,7 +13,7 @@ class NileScore(UUIDMixin, Base):
     __tablename__ = "nile_scores"
 
     contract_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid, ForeignKey("contracts.id"), nullable=False, index=True
+        Uuid, ForeignKey("contracts.id", ondelete="CASCADE"), nullable=False, index=True
     )
 
     # Composite NILE score (0-100)

@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import JSON, DateTime, Numeric, String, Text
+from sqlalchemy import JSON, DateTime, Index, Numeric, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from nile.models.base import Base, TimestampMixin, UUIDMixin
@@ -49,6 +49,10 @@ class Person(UUIDMixin, TimestampMixin, Base):
     nile_likeness_score: Mapped[float] = mapped_column(Numeric(5, 2), default=0)
     nile_essence_score: Mapped[float] = mapped_column(Numeric(5, 2), default=0)
     nile_total_score: Mapped[float] = mapped_column(Numeric(5, 2), default=0)
+
+    __table_args__ = (
+        Index("ix_person_category_verification", "category", "verification_level"),
+    )
 
     # Relationships
     soul_token: Mapped[SoulToken | None] = relationship(

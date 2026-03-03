@@ -12,7 +12,7 @@ class AgentContribution(UUIDMixin, TimestampMixin, Base):
     __tablename__ = "agent_contributions"
 
     agent_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid, ForeignKey("agents.id"), nullable=False, index=True
+        Uuid, ForeignKey("agents.id", ondelete="CASCADE"), nullable=False, index=True
     )
 
     contribution_type: Mapped[str] = mapped_column(
@@ -20,8 +20,12 @@ class AgentContribution(UUIDMixin, TimestampMixin, Base):
     )  # detection, patch, exploit, verification
 
     # Optional links
-    contract_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, ForeignKey("contracts.id"))
-    scan_job_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, ForeignKey("scan_jobs.id"))
+    contract_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("contracts.id", ondelete="CASCADE")
+    )
+    scan_job_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("scan_jobs.id", ondelete="CASCADE")
+    )
 
     # Result
     severity_found: Mapped[str | None] = mapped_column(String(16))

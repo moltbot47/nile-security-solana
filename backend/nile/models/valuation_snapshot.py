@@ -18,7 +18,9 @@ if TYPE_CHECKING:
 class ValuationSnapshot(UUIDMixin, Base):
     __tablename__ = "valuation_snapshots"
 
-    person_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("persons.id"), index=True)
+    person_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("persons.id", ondelete="CASCADE"), index=True
+    )
 
     # NILE sub-scores for human valuation (0-100)
     name_score: Mapped[float] = mapped_column(Numeric(5, 2))

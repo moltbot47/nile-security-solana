@@ -5,6 +5,7 @@ runs pattern matching against known exploits, and produces
 NILE scoring inputs across all four dimensions (Name, Image, Likeness, Essence).
 """
 
+import asyncio
 import json
 import logging
 from pathlib import Path
@@ -60,9 +61,11 @@ class SolanaProgramAnalyzer:
         if not validate_solana_address(address):
             return {"error": "Invalid Solana address", "address": address}
 
-        # Determine if this is a program or token
-        program_info = await chain_service.get_program_info(address)
-        token_info = await chain_service.get_token_info(address)
+        # Determine if this is a program or token (parallel RPC)
+        program_info, token_info = await asyncio.gather(
+            chain_service.get_program_info(address),
+            chain_service.get_token_info(address),
+        )
 
         if program_info and program_info.get("executable"):
             return await self._analyze_program(address, program_info)
@@ -73,15 +76,13 @@ class SolanaProgramAnalyzer:
 
     async def _analyze_program(self, address: str, program_info: dict) -> dict:
         """Analyze an executable Solana program."""
-        # Fetch IDL
-        idl = await fetch_idl(address)
+        # Parallel RPC: IDL, authority, and ecosystem checks
+        idl, authority_info, ecosystem = await asyncio.gather(
+            fetch_idl(address),
+            chain_service.get_program_authority(address),
+            assess_ecosystem_presence(address),
+        )
         idl_analysis = analyze_idl_security(idl) if idl else analyze_idl_security({})
-
-        # Get upgrade authority info
-        authority_info = await chain_service.get_program_authority(address)
-
-        # Ecosystem checks
-        ecosystem = await assess_ecosystem_presence(address)
 
         # Pattern matching
         exploit_matches = self._match_exploit_patterns(idl_analysis, authority_info)
@@ -108,10 +109,11 @@ class SolanaProgramAnalyzer:
 
     async def _analyze_token(self, address: str, token_info: dict) -> dict:
         """Analyze an SPL token mint with pump.fun-specific heuristics."""
-        ecosystem = await assess_ecosystem_presence(address)
-
-        # Deep pump.fun analysis (holder concentration, creator, LP, age)
-        pf = await pumpfun_analyzer.analyze(address, token_info)
+        # Parallel: ecosystem check + pump.fun analysis
+        ecosystem, pf = await asyncio.gather(
+            assess_ecosystem_presence(address),
+            pumpfun_analyzer.analyze(address, token_info),
+        )
 
         # Token-specific exploit matching (enhanced with pumpfun signals)
         exploit_matches = self._match_token_exploit_patterns(token_info, pf)

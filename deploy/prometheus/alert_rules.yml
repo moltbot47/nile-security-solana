@@ -1,0 +1,118 @@
+groups:
+  - name: nile_availability
+    rules:
+      - alert: ServiceDown
+        expr: up{job="nile-backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "NILE backend is down"
+          description: "{{ $labels.instance }} has been unreachable for >1 minute."
+
+      - alert: HealthCheckFailing
+        expr: probe_success{job="nile-backend"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Health check failing"
+          description: "{{ $labels.instance }} health endpoint returning errors for >2 minutes."
+
+  - name: nile_error_rates
+    rules:
+      - alert: HighErrorRate
+        expr: |
+          (
+            sum(rate(http_requests_total{job="nile-backend", status=~"5.."}[5m]))
+            /
+            sum(rate(http_requests_total{job="nile-backend"}[5m]))
+          ) > 0.05
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "5XX error rate >5%"
+          description: "Backend returning {{ $value | humanizePercentage }} server errors over 5 minutes."
+
+      - alert: CriticalErrorRate
+        expr: |
+          (
+            sum(rate(http_requests_total{job="nile-backend", status=~"5.."}[5m]))
+            /
+            sum(rate(http_requests_total{job="nile-backend"}[5m]))
+          ) > 0.15
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "5XX error rate >15%"
+          description: "Backend returning {{ $value | humanizePercentage }} server errors — possible outage."
+
+  - name: nile_latency
+    rules:
+      - alert: HighLatencyP95
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(http_request_duration_seconds_bucket{job="nile-backend"}[5m])) by (le)
+          ) > 2.0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "P95 latency >2s"
+          description: "95th percentile response time is {{ $value | humanizeDuration }}."
+
+      - alert: SlowScanJobs
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(scan_job_duration_seconds_bucket{job="nile-backend"}[15m])) by (le)
+          ) > 30.0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Scan jobs taking >30s at P95"
+          description: "Contract scan latency is {{ $value | humanizeDuration }} — may indicate RPC throttling."
+
+  - name: nile_resources
+    rules:
+      - alert: HighMemoryUsage
+        expr: process_resident_memory_bytes{job="nile-backend"} > 512 * 1024 * 1024
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Backend memory >512MB"
+          description: "Resident memory at {{ $value | humanize1024 }}B — check for leaks."
+
+      - alert: DatabaseConnectionPoolExhausted
+        expr: db_pool_checked_out{job="nile-backend"} >= db_pool_size{job="nile-backend"}
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "DB connection pool exhausted"
+          description: "All {{ $value }} database connections in use for >2 minutes."
+
+  - name: nile_business
+    rules:
+      - alert: NoScansCompleted
+        expr: |
+          sum(increase(scan_jobs_completed_total{job="nile-backend"}[1h])) == 0
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "No scans completed in 1 hour"
+          description: "Zero scan jobs finished in the last hour — check scan pipeline."
+
+      - alert: RateLimitSpike
+        expr: |
+          sum(rate(http_requests_total{job="nile-backend", status="429"}[5m])) > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High rate of 429 responses"
+          description: "Rate limiting triggered {{ $value | humanize }} req/s — possible abuse."

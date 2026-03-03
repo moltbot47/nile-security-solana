@@ -13,7 +13,7 @@ class ScanJob(UUIDMixin, Base):
     __tablename__ = "scan_jobs"
 
     contract_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid, ForeignKey("contracts.id"), nullable=False, index=True
+        Uuid, ForeignKey("contracts.id", ondelete="CASCADE"), nullable=False, index=True
     )
 
     status: Mapped[str] = mapped_column(String(16), default="queued", index=True)

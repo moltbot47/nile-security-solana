@@ -21,7 +21,9 @@ class KPIMetric(Base):
     value: Mapped[float] = mapped_column(Numeric(12, 4), nullable=False)
 
     # Optional dimensional breakdowns
-    contract_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, ForeignKey("contracts.id"))
+    contract_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("contracts.id", ondelete="SET NULL")
+    )
     category: Mapped[str | None] = mapped_column(String(64))
     agent: Mapped[str | None] = mapped_column(String(32))
 

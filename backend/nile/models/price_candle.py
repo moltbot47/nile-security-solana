@@ -28,7 +28,9 @@ class PriceCandle(Base):
     __tablename__ = "price_candles"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
-    soul_token_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("soul_tokens.id"), index=True)
+    soul_token_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("soul_tokens.id", ondelete="CASCADE"), index=True
+    )
 
     interval: Mapped[str] = mapped_column(String(4), nullable=False, index=True)  # 1m, 5m, 1h, 1d
     open_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)

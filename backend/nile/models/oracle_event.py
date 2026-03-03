@@ -17,7 +17,9 @@ if TYPE_CHECKING:
 class OracleEvent(UUIDMixin, TimestampMixin, Base):
     __tablename__ = "oracle_events"
 
-    person_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("persons.id"), index=True)
+    person_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("persons.id", ondelete="CASCADE"), index=True
+    )
 
     # Event details
     event_type: Mapped[str] = mapped_column(

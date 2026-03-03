@@ -15,9 +15,11 @@ class AgentMessage(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
 
     sender_agent_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid, ForeignKey("agents.id"), nullable=False, index=True
+        Uuid, ForeignKey("agents.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    recipient_agent_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, ForeignKey("agents.id"))
+    recipient_agent_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("agents.id", ondelete="SET NULL")
+    )
 
     channel: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
     message_type: Mapped[str] = mapped_column(String(16), nullable=False)

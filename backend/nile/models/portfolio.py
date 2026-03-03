@@ -18,7 +18,9 @@ class Portfolio(UUIDMixin, TimestampMixin, Base):
     __tablename__ = "portfolios"
 
     wallet_address: Mapped[str] = mapped_column(String(48), nullable=False, index=True)
-    soul_token_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("soul_tokens.id"), index=True)
+    soul_token_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("soul_tokens.id", ondelete="CASCADE"), index=True
+    )
 
     balance: Mapped[float] = mapped_column(Numeric(28, 18), default=0)
     avg_buy_price_sol: Mapped[float] = mapped_column(Numeric(20, 10), default=0)

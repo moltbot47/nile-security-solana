@@ -159,14 +159,12 @@ async def list_agents(
     query = select(Agent)
     if status:
         query = query.where(Agent.status == status)
+    if capability:
+        query = query.where(Agent.capabilities.contains([capability]))
     query = query.order_by(Agent.total_points.desc()).limit(limit)
 
     result = await db.execute(query)
     agents = result.scalars().all()
-
-    # Filter by capability in Python (JSONB array contains)
-    if capability:
-        agents = [a for a in agents if capability in (a.capabilities or [])]
 
     return [
         AgentResponse(
@@ -204,11 +202,11 @@ async def leaderboard(
         .order_by(Agent.total_points.desc())
         .limit(limit)
     )
+    if capability:
+        query = query.where(Agent.capabilities.contains([capability]))
+
     result = await db.execute(query)
     agents = result.scalars().all()
-
-    if capability:
-        agents = [a for a in agents if capability in (a.capabilities or [])]
 
     return [
         LeaderboardEntry(

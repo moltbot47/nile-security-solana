@@ -6,7 +6,7 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import JSON, DateTime, ForeignKey, Integer, Numeric, String, Uuid
+from sqlalchemy import JSON, DateTime, ForeignKey, Index, Integer, Numeric, String, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from nile.models.base import Base, TimestampMixin, UUIDMixin
@@ -21,7 +21,7 @@ class SoulToken(UUIDMixin, TimestampMixin, Base):
     __tablename__ = "soul_tokens"
 
     person_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid, ForeignKey("persons.id"), unique=True, index=True
+        Uuid, ForeignKey("persons.id", ondelete="CASCADE"), unique=True, index=True
     )
 
     # On-chain addresses (Solana base58, max 44 chars)
@@ -63,6 +63,10 @@ class SoulToken(UUIDMixin, TimestampMixin, Base):
     creator_royalty_bps: Mapped[int] = mapped_column(Integer, default=50)  # 0.5%
 
     metadata_: Mapped[dict] = mapped_column("metadata", JSON, default=dict)
+
+    __table_args__ = (
+        Index("ix_soul_token_phase_price", "phase", "current_price_sol"),
+    )
 
     # Relationships
     person: Mapped[Person] = relationship("Person", back_populates="soul_token")

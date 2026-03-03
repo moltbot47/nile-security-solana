@@ -17,7 +17,9 @@ if TYPE_CHECKING:
 class Trade(UUIDMixin, TimestampMixin, Base):
     __tablename__ = "trades"
 
-    soul_token_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("soul_tokens.id"), index=True)
+    soul_token_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("soul_tokens.id", ondelete="CASCADE"), index=True
+    )
 
     # Trade details
     side: Mapped[str] = mapped_column(String(4), nullable=False)  # buy or sell
@@ -46,6 +48,7 @@ class Trade(UUIDMixin, TimestampMixin, Base):
     __table_args__ = (
         Index("ix_trade_token_created", "soul_token_id", "created_at"),
         Index("ix_trade_trader_created", "trader_address", "created_at"),
+        Index("ix_trade_source_created", "source", "created_at"),
     )
 
     # Relationships
