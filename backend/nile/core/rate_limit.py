@@ -48,8 +48,17 @@ class RateLimiter:
 
         cutoff = now - self.window_seconds
         self._requests[key] = [t for t in self._requests[key] if t > cutoff]
+        current = len(self._requests[key])
 
-        if len(self._requests[key]) >= self.max_requests:
+        # Store rate limit info for response headers
+        request.state.rate_limit = {
+            "limit": self.max_requests,
+            "remaining": max(0, self.max_requests - current - 1),
+            "reset": int(now + self.window_seconds),
+        }
+
+        if current >= self.max_requests:
+            request.state.rate_limit["remaining"] = 0
             raise HTTPException(
                 429,
                 detail=f"Rate limit exceeded: {self.max_requests} requests "
@@ -103,7 +112,16 @@ class RedisRateLimiter:
             results = await pipe.execute()
 
             count = results[1]
+
+            # Store rate limit info for response headers
+            request.state.rate_limit = {
+                "limit": self.max_requests,
+                "remaining": max(0, self.max_requests - count - 1),
+                "reset": int(now + self.window_seconds),
+            }
+
             if count >= self.max_requests:
+                request.state.rate_limit["remaining"] = 0
                 raise HTTPException(
                     429,
                     detail=f"Rate limit exceeded: {self.max_requests} requests "

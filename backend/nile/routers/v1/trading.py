@@ -130,7 +130,7 @@ async def execute_buy(
         if alerts:
             logger.warning("Risk alerts after buy: %s", alerts)
     except Exception:
-        logger.exception("Risk check failed after buy")
+        logger.warning("Risk check failed after buy for token %s", token.id)
 
     return TradeResponse.model_validate(trade)
 
@@ -188,7 +188,7 @@ async def execute_sell(
         if alerts:
             logger.warning("Risk alerts after sell: %s", alerts)
     except Exception:
-        logger.exception("Risk check failed after sell")
+        logger.warning("Risk check failed after sell for token %s", token.id)
 
     return TradeResponse.model_validate(trade)
 

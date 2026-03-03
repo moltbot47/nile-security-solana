@@ -38,7 +38,12 @@ jobs:
         run: uv run mypy nile/
 
       - name: Dependency audit
-        run: uv run pip-audit --strict 2>/dev/null || echo "pip-audit not installed, skipping"
+        run: uv pip install pip-audit && uv run pip-audit --strict
+
+      - name: Secret scanning
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Test + Coverage
         run: uv run pytest -v --cov=nile --cov-report=term-missing --cov-report=xml --cov-fail-under=95

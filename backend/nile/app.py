@@ -28,6 +28,12 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["X-XSS-Protection"] = "1; mode=block"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+        # Rate limit headers (set by rate limiter check())
+        rl = getattr(request.state, "rate_limit", None)
+        if rl:
+            response.headers["X-RateLimit-Limit"] = str(rl["limit"])
+            response.headers["X-RateLimit-Remaining"] = str(rl["remaining"])
+            response.headers["X-RateLimit-Reset"] = str(rl["reset"])
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; "
             "script-src 'self'; "

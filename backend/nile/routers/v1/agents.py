@@ -4,7 +4,7 @@ import uuid
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -33,14 +33,14 @@ heartbeat_limiter = create_limiter(max_requests=60, window_seconds=60)
 
 
 class AgentRegisterRequest(BaseModel):
-    name: str
-    description: str | None = None
-    version: str = "0.1.0"
-    owner_id: str
-    capabilities: list[str] = []
-    config_schema: dict = {}
-    api_endpoint: str | None = None
-    docker_image: str | None = None
+    name: str = Field(..., min_length=1, max_length=128)
+    description: str | None = Field(None, max_length=2000)
+    version: str = Field("0.1.0", max_length=32)
+    owner_id: str = Field(..., min_length=1, max_length=128)
+    capabilities: list[str] = Field(default_factory=list)
+    config_schema: dict = Field(default_factory=dict)
+    api_endpoint: str | None = Field(None, max_length=512)
+    docker_image: str | None = Field(None, max_length=256)
 
 
 class AgentRegisterResponse(BaseModel):
@@ -71,12 +71,12 @@ class AgentResponse(BaseModel):
 
 
 class AgentUpdateRequest(BaseModel):
-    description: str | None = None
-    version: str | None = None
+    description: str | None = Field(None, max_length=2000)
+    version: str | None = Field(None, max_length=32)
     capabilities: list[str] | None = None
     config_schema: dict | None = None
-    api_endpoint: str | None = None
-    docker_image: str | None = None
+    api_endpoint: str | None = Field(None, max_length=512)
+    docker_image: str | None = Field(None, max_length=256)
 
 
 class ContributionResponse(BaseModel):

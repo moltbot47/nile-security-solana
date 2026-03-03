@@ -39,7 +39,7 @@ async def readiness():
             await session.execute(text("SELECT 1"))
         checks["database"] = "ok"
     except Exception as exc:
-        checks["database"] = f"error: {exc}"
+        checks["database"] = "error: unavailable"
         overall = "degraded"
         logger.warning("Health check: database unreachable: %s", exc)
 
@@ -51,7 +51,7 @@ async def readiness():
         await r.ping()
         checks["redis"] = "ok"
     except Exception as exc:
-        checks["redis"] = f"error: {exc}"
+        checks["redis"] = "error: unavailable"
         overall = "degraded"
         logger.warning("Health check: redis unreachable: %s", exc)
 
@@ -68,10 +68,10 @@ async def readiness():
             if data.get("result") == "ok":
                 checks["solana_rpc"] = "ok"
             else:
-                checks["solana_rpc"] = f"unhealthy: {data.get('error', data)}"
+                checks["solana_rpc"] = "unhealthy"
                 overall = "degraded"
     except Exception as exc:
-        checks["solana_rpc"] = f"error: {exc}"
+        checks["solana_rpc"] = "error: unavailable"
         overall = "degraded"
         logger.warning("Health check: Solana RPC unreachable: %s", exc)
 

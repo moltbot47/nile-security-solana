@@ -69,7 +69,7 @@ async def create_person(
 async def list_persons(
     category: str | None = None,
     verification: str | None = None,
-    search: str | None = None,
+    search: str | None = Query(None, max_length=200),
     sort: str = "score",
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
